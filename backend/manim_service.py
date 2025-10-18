@@ -35,24 +35,14 @@ class ManimService:
     def _render_video(self, script_path: Path) -> bool:
         """Run Manim to render the video."""
         try:
-            # Use the manim.cfg file from the backend directory
-            config_file = self.base_dir / "manim.cfg"
-            
             cmd = [
                 "manim",
                 f"-{settings.MANIM_QUALITY}",
                 f"--format={settings.MANIM_FORMAT}",
                 f"--media_dir={self.video_dir}",
-            ]
-            
-            # Add config file if it exists
-            if config_file.exists():
-                cmd.extend([f"--config_file={config_file}"])
-            
-            cmd.extend([
                 str(script_path),
                 settings.SCENE_CLASS_NAME
-            ])
+            ]
             
             result = subprocess.run(cmd, capture_output=True, text=True)
             
