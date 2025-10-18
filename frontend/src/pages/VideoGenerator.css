@@ -1,135 +1,271 @@
 .video-generator {
   max-width: 900px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2rem 2rem 4rem;
+  position: relative;
+  z-index: 10;
 }
 
+.highlight-purple {
+  color: #8b7fd8;
+  font-weight: 600;
+}
+
+.highlight-cyan {
+  color: #4dd4e8;
+  font-weight: 400;
+}
+
+/* Input Section */
 .input-section {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  background: rgba(26, 31, 53, 0.5);
+  backdrop-filter: blur(10px);
+  padding: 2.5rem;
+  border-radius: 16px;
+  border: 1px solid rgba(139, 127, 216, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  margin-bottom: 3rem;
+  transition: all 0.4s ease;
+}
+
+.input-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #e8e9ed;
+  margin: 0 0 2rem 0;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+.input-section:hover {
+  border-color: rgba(139, 127, 216, 0.3);
+  box-shadow: 0 12px 48px rgba(139, 127, 216, 0.2);
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
   font-weight: 600;
-  color: #333;
+  font-size: 1.1rem;
+  color: #e8e9ed;
+  letter-spacing: 0.05em;
 }
 
-.form-group textarea {
+.prompt-input {
   width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
+  padding: 1.25rem;
+  background: rgba(10, 14, 26, 0.6);
+  border: 2px solid rgba(139, 127, 216, 0.3);
+  border-radius: 12px;
   font-size: 1rem;
-  font-family: inherit;
-  transition: border-color 0.3s;
+  font-family: 'Exo 2', sans-serif;
+  color: #e8e9ed;
+  transition: all 0.3s ease;
   resize: vertical;
+  line-height: 1.6;
 }
 
-.form-group textarea:focus {
+.prompt-input::placeholder {
+  color: #6b7280;
+}
+
+.prompt-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #8b7fd8;
+  box-shadow: 0 0 0 3px rgba(139, 127, 216, 0.1),
+              0 0 20px rgba(139, 127, 216, 0.3);
+  background: rgba(10, 14, 26, 0.8);
 }
 
+.prompt-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Generate Button */
 .generate-btn {
   width: 100%;
-  padding: 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  padding: 1.25rem 2rem;
+  background: linear-gradient(135deg, #8b7fd8 0%, #4dd4e8 100%);
+  color: #0a0e1a;
   border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
+  border-radius: 12px;
+  font-size: 1.2rem;
   font-weight: 600;
+  letter-spacing: 0.05em;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  box-shadow: 0 4px 15px rgba(139, 127, 216, 0.3);
 }
 
 .generate-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 25px rgba(139, 127, 216, 0.5);
+  background: linear-gradient(135deg, #9d8de6 0%, #5de2f6 100%);
+}
+
+.generate-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .generate-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
-.error-message,
-.loading-message {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  margin-bottom: 2rem;
-  text-align: center;
-}
-
-.error-message {
-  border-left: 4px solid #f44336;
-}
-
-.error-message p {
-  color: #f44336;
-  margin: 0;
-}
-
-.loading-message {
-  border-left: 4px solid #667eea;
-}
-
-.loading-message p {
-  color: #667eea;
-  margin: 0;
-}
-
-.video-section {
-  background: white;
+/* Message Cards */
+.message-card {
+  background: rgba(26, 31, 53, 0.5);
+  backdrop-filter: blur(10px);
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 3rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border: 1px solid rgba(139, 127, 216, 0.15);
 }
 
-.video-section h2 {
-  margin-top: 0;
-  color: #333;
+.message-card p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #e8e9ed;
+}
+
+/* Error Message */
+.error-message {
+  border-left: 4px solid #ff6b6b;
+}
+
+.message-icon {
+  font-size: 1.5rem;
+  color: #ff6b6b;
+  font-weight: bold;
+}
+
+/* Loading Message */
+.loading-message {
+  border-left: 4px solid #4dd4e8;
+  justify-content: center;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(77, 212, 232, 0.3);
+  border-top-color: #4dd4e8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Video Section */
+.video-section {
+  background: rgba(26, 31, 53, 0.5);
+  backdrop-filter: blur(10px);
+  padding: 3rem;
+  border-radius: 16px;
+  border: 1px solid rgba(139, 127, 216, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.section-title {
+  font-size: 2rem;
+  color: #e8e9ed;
   text-align: center;
+  margin: 0 0 2rem;
+  letter-spacing: 0.05em;
+}
+
+.video-container {
+  margin-bottom: 2rem;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .video-player {
   width: 100%;
   max-width: 100%;
-  border-radius: 8px;
+  display: block;
   background: #000;
 }
 
+/* Code Section */
 .code-section {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background: #f5f5f5;
-  border-radius: 8px;
+  margin-top: 2rem;
+  padding: 0;
+  background: transparent;
+  border: 1px solid rgba(139, 127, 216, 0.2);
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-.code-section summary {
+.code-summary {
   cursor: pointer;
   font-weight: 600;
-  color: #667eea;
+  font-size: 1rem;
+  color: #8b7fd8;
   user-select: none;
+  padding: 1.25rem;
+  background: rgba(139, 127, 216, 0.1);
+  transition: all 0.3s ease;
+  letter-spacing: 0.05em;
 }
 
-.code-section pre {
-  background: #1e1e1e;
+.code-summary:hover {
+  background: rgba(139, 127, 216, 0.2);
+  color: #9d8de6;
+}
+
+.code-block {
+  background: #0a0e1a;
   color: #d4d4d4;
-  padding: 1rem;
-  border-radius: 8px;
+  padding: 1.5rem;
   overflow-x: auto;
-  margin-top: 1rem;
+  margin: 0;
   font-size: 0.9rem;
-  line-height: 1.5;
+  line-height: 1.6;
+  border-top: 1px solid rgba(139, 127, 216, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .video-generator {
+    padding: 0 1rem 4rem;
+  }
+
+  .hero-section {
+    padding: 2rem 0 4rem;
+    margin-bottom: 2rem;
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.1rem;
+  }
+
+  .input-section,
+  .video-section {
+    padding: 2rem;
+  }
+
+  .generate-btn {
+    font-size: 1rem;
+    padding: 1rem;
+  }
 }
