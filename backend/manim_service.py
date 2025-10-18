@@ -34,17 +34,53 @@ class ManimService:
     
     def _render_video(self, script_path: Path) -> bool:
         """Run Manim to render the video."""
-        cmd = [
-            "manim",
-            f"-{settings.MANIM_QUALITY}",
-            f"--format={settings.MANIM_FORMAT}",
-            f"--media_dir={self.video_dir}",
-            str(script_path),
-            settings.SCENE_CLASS_NAME
-        ]
-        
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        return result.returncode == 0
+        try:
+            # Use the manim.cfg file from the backend directory
+            config_file = self.base_dir / "manim.cfg"
+            
+            cmd = [
+                "manim",
+                f"-{settings.MANIM_QUALITY}",
+                f"--format={settings.MANIM_FORMAT}",
+                f"--media_dir={self.video_dir}",
+            ]
+            
+            # Add config file if it exists
+            if config_file.exists():
+                cmd.extend([f"--config_file={config_file}"])
+            
+            cmd.extend([
+                str(script_path),
+                settings.SCENE_CLASS_NAME
+            ])
+            
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            
+            if result.returncode != 0:
+                print(f"Manim render failed with return code {result.returncode}")
+                print(f"STDOUT: {result.stdout}")
+                print(f"STDERR: {result.stderr}")
+                
+                # Check for LaTeX-related errors
+                error_output = result.stderr + result.stdout
+                if "latex" in error_output.lower() or "dvisvgm" in error_output.lower():
+                    print("\n" + "="*80)
+                    print("LATEX ERROR DETECTED!")
+                    print("="*80)
+                    print("LaTeX is not installed on your system.")
+                    print("The generated code is trying to use MathTex, Tex, or Matrix objects.")
+                    print("\nTo fix this:")
+                    print("1. Install LaTeX (see LATEX_SETUP.md in backend folder)")
+                    print("2. OR ask for simpler animations without mathematical notation")
+                    print("="*80 + "\n")
+                
+                return False
+                
+            return True
+            
+        except Exception as e:
+            print(f"Manim render error: {str(e)}")
+            return False
     
     def _move_video(self, filename: str) -> Path:
         """Find and move the generated video to the main videos folder."""
@@ -57,17 +93,24 @@ class ManimService:
     
     def render_manim_video(self, manim_code: str):
         """Render a Manim video from Python code and return paths."""
-        filename = self._generate_filename()
-        script_path = self._save_script(manim_code, filename)
-        
         try:
+            filename = self._generate_filename()
+            script_path = self._save_script(manim_code, filename)
+            
             if self._render_video(script_path):
                 video_path = self._move_video(filename)
                 if video_path:
                     return str(video_path), str(script_path)
-            return None, str(script_path)
+                else:
+                    print("Warning: Video file not found after successful render")
+                    return None, str(script_path)
+            else:
+                print("Manim render failed - check error messages above")
+                return None, str(script_path)
+                
         except Exception as e:
-            return None, str(script_path)
+            print(f"Manim service error: {str(e)}")
+            return None, str(script_path) if 'script_path' in locals() else None
     
     def get_video_path(self, filename: str) -> Path:
         """Get the full path to a video file."""
