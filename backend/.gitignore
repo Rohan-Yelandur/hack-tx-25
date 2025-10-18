@@ -2,3 +2,6 @@
 .venv
 manim_code
 manim_videos
+audio_files
+audio_scripts
+venv
