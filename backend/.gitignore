@@ -8,3 +8,6 @@ manim_videos
 audio_files
 audio_scripts
 venv
+
+#
+__pycache__
