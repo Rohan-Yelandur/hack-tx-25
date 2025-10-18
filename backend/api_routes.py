@@ -17,8 +17,23 @@ def register_routes(app):
             return jsonify({'error': 'Prompt is required'}), 400
         
         try:
-            manim_code = gemini_service.generate_manim_code(prompt)
-            video_path, script_path = manim_service.render_manim_video(manim_code)
+            # Generate Manim code using Gemini
+            try:
+                manim_code = gemini_service.generate_manim_code(prompt)
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'error': f'Failed to generate code: {str(e)}'
+                }), 500
+            
+            # Render the video using Manim
+            try:
+                video_path, script_path = manim_service.render_manim_video(manim_code)
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'error': f'Failed to render video: {str(e)}'
+                }), 500
             
             if video_path:
                 video_filename = Path(video_path).name
@@ -33,12 +48,15 @@ def register_routes(app):
             else:
                 return jsonify({
                     'success': False,
-                    'error': 'Failed to render video',
-                    'script_url': f'/api/script/{Path(script_path).name}'
+                    'error': 'Video rendering failed - check console for detailed error messages',
+                    'script_url': f'/api/script/{Path(script_path).name}' if script_path else None
                 }), 500
                 
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
+            return jsonify({
+                'success': False,
+                'error': f'Unexpected error: {str(e)}'
+            }), 500
     
     
     @app.route('/api/video/<filename>', methods=['GET'])
