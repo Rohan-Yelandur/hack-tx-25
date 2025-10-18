@@ -1,5 +1,8 @@
+# Environment
 .env
 .venv
+
+# Manim output folders
 manim_code
 manim_videos
 audio_files

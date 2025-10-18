@@ -1,6 +1,21 @@
 # Backend - Manim Video Generator
 
-This backend uses Gemini AI to generate Manim animation code and renders videos using ffmpeg.
+Flask API backend that uses Gemini AI to generate Manim animation code and renders videos.
+
+## Project Structure
+
+```
+backend/
+├── app.py                 # Flask app initialization
+├── settings.py            # Configuration and constants
+├── api_routes.py          # API route handlers
+├── gemini_service.py      # Gemini AI integration
+├── manim_service.py       # Manim rendering logic
+├── manim_code/            # Generated Manim scripts
+├── manim_videos/          # Rendered videos
+├── requirements.txt       # Python dependencies
+└── .env                   # Environment variables
+```
 
 ## Setup
 
@@ -18,30 +33,55 @@ pip install -r requirements.txt
 GEMINI_API_KEY=your_api_key_here
 ```
 
-## Usage
+## Running the Server
 
-Run the main script:
 ```bash
 python app.py
 ```
 
-This will:
-1. Ask Gemini to generate Manim code based on a prompt
-2. Save the script to `manim_code/` with format: `<topic>_<timestamp>.py`
-3. Render the video using Manim (which uses ffmpeg internally)
-4. Save the video to `manim_videos/` with the same filename
+Server will start on `http://localhost:5000`
 
-## Customization
+## API Endpoints
 
-You can modify the `main()` function in `app.py` to:
-- Change the prompt for different animations
-- Change the topic for organizing videos by category
-- Adjust video quality (change `-ql` to `-qh` for high quality)
+### POST `/api/generate`
+Generate a video from a text prompt.
 
-## How it works
+**Request Body:**
+```json
+{
+  "prompt": "Create a circle that transforms into a square"
+}
+```
 
-1. **generate_manim_code(prompt)**: Uses Gemini to create Python code for a Manim scene
-2. **render_manim_video(code, topic)**: Saves the code to `manim_code/` and runs Manim to render it
-3. Videos and scripts are saved with matching filenames in their respective folders
+**Response:**
+```json
+{
+  "success": true,
+  "video_url": "/api/video/20251018_143022.mp4",
+  "script_url": "/api/script/20251018_143022.py",
+  "manim_code": "from manim import *\n..."
+}
+```
 
-Manim automatically uses ffmpeg for video rendering, so no manual ffmpeg commands are needed.
+### GET `/api/video/<filename>`
+Retrieve a generated video file.
+
+### GET `/api/script/<filename>`
+Retrieve a generated script file.
+
+## Configuration
+
+Modify settings in `settings.py`:
+- `GEMINI_MODEL`: AI model to use
+- `MANIM_QUALITY`: Video quality (`ql`, `qm`, `qh`)
+- `PORT`: Server port
+
+## Architecture
+
+- **app.py**: Flask application setup and initialization
+- **api_routes.py**: Handle HTTP requests and responses
+- **gemini_service.py**: AI code generation logic
+- **manim_service.py**: Video rendering and file management
+- **settings.py**: Centralized configuration
+
+Manim automatically uses ffmpeg for video rendering.
