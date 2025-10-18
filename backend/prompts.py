@@ -11,8 +11,6 @@ def generate_manim_prompt(prompt: str) -> str:
     5. Return ONLY valid, syntactically correct Python code, no explanations or markdown
     6. Target 5-15 seconds total animation time
     7. Test imports and basic syntax using code execution to ensure no errors
-    8. **IMPORTANT: AVOID MathTex(), Tex(), and Matrix() objects - LaTeX is not installed!**
-    9. **Use Text() and MarkupText() with Unicode symbols instead!**
 
     CORE STRUCTURE:
     ```python
@@ -25,12 +23,11 @@ def generate_manim_prompt(prompt: str) -> str:
     ```
 
     ESSENTIAL MOBJECTS (Visual Objects):
-    - Text & Math: 
-      * Text("Hello") - Use for regular text (no LaTeX required)
-      * MathTex(r"\\frac{{a}}{{b}}") - For mathematical expressions (requires LaTeX)
-      * Tex(r"\\LaTeX") - For LaTeX text (requires LaTeX)
-      * MarkupText("<b>Bold</b>") - For styled text without LaTeX
-      * PREFER Text() and MarkupText() when possible to avoid LaTeX dependencies
+    - Text & Math:
+      * Text("Hello") - Use for regular text
+      * MathTex(r"\\frac{{a}}{{b}}") - For mathematical expressions with LaTeX formatting
+      * Tex(r"\\LaTeX") - For LaTeX text rendering
+      * MarkupText("<b>Bold</b>") - For styled text with HTML-like tags
     - Shapes: Circle(), Square(), Rectangle(), Triangle(), Polygon(), RegularPolygon(n=6)
     - Lines & Arrows: Line(start, end), Arrow(start, end), Vector([x,y]), Dot(point)
     - Graphs: Axes(), NumberPlane(), FunctionGraph(lambda x: x**2)
@@ -51,6 +48,20 @@ def generate_manim_prompt(prompt: str) -> str:
     - Relative: obj.next_to(other, DOWN, buff=0.5), obj.shift(RIGHT*2 + UP)
     - Alignment: obj.align_to(other, UP), VGroup(*objects).arrange(DOWN, buff=0.5)
     - Constants: UP, DOWN, LEFT, RIGHT, UL, UR, DL, DR, ORIGIN
+
+    FRAME BOUNDARIES & CAMERA (CRITICAL TO AVOID CROPPING):
+    - **Frame dimensions: Width = -7 to +7, Height = -4 to +4**
+    - **Keep ALL objects within these bounds to avoid cropping!**
+    - Safe zone for main content: X: -6 to +6, Y: -3 to +3
+    - Default object sizes:
+      * Circle: radius ≤ 2 (safe), radius ≤ 1.5 (recommended for complex scenes)
+      * Square/Rectangle: side_length ≤ 3 (safe), ≤ 2 (recommended)
+      * Text: font_size ≤ 48 (safe), scale ≤ 1.5 for long text
+    - **IMPORTANT: When creating large objects or groups, scale them down!**
+      Example: VGroup(*objects).scale(0.7) to fit everything in frame
+    - Use .get_width() and .get_height() to check object dimensions
+    - Position objects at ORIGIN or use .move_to(ORIGIN) for centered content
+    - Test positioning: If unsure, start small and at center (ORIGIN)
 
     ANIMATION PATTERNS:
     1. Simple display:
@@ -90,52 +101,52 @@ def generate_manim_prompt(prompt: str) -> str:
     - stroke_width=4: Line thickness
  
 
-    MATH & TEXT TIPS (NO LATEX NEEDED):
+    MATH & TEXT TIPS:
     - Text() for simple text: Text("E = mc²").scale(1)
+    - MathTex() for professional math formatting: MathTex(r"E = mc^2", r"\frac{a}{b}", r"\int_0^1 x^2 dx")
+    - Tex() for LaTeX text rendering: Tex(r"The equation is: ", r"$x^2 + y^2 = r^2$")
     - MarkupText() for styled text: MarkupText("<b>Bold</b> <i>Italic</i>")
-    - Chain methods: Text("Hello").scale(2).to_edge(UP).set_color(BLUE)
-    
-    UNICODE MATH SYMBOLS (Copy these - No LaTeX required!):
-    - Greek: α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σ τ υ φ χ ψ ω
-    - Greek Upper: Α Β Γ Δ Ε Ζ Η Θ Ι Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω
-    - Superscripts: ⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁺ ⁻ ⁼ ⁽ ⁾ ⁿ
-    - Subscripts: ₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₊ ₋ ₌ ₍ ₎
-    - Operators: + − × ÷ ± ∓ = ≠ ≈ ≡ < > ≤ ≥ ∞
-    - Calculus: ∫ ∬ ∭ ∮ ∂ ∇ √ ∛ ∜
-    - Set theory: ∈ ∉ ⊂ ⊃ ⊆ ⊇ ∪ ∩ ∅ ℕ ℤ ℚ ℝ ℂ
-    - Logic: ∧ ∨ ¬ ⊕ ⊗ ∀ ∃ ∴ ∵
-    - Arrows: → ← ↑ ↓ ↔ ⇒ ⇐ ⇔
-    - Others: ∑ ∏ · ° ′ ″ ℏ Å
-    
-    Examples using Unicode:
-    - "f(x) = x² + 2x + 1" instead of MathTex
-    - "θ = 45°" instead of MathTex
-    - "∑ᵢ₌₁ⁿ xᵢ" instead of MathTex
-    - "E = mc²" instead of MathTex
-    - "π ≈ 3.14159" instead of MathTex
-    
-    **CRITICAL: DO NOT use MathTex(), Tex(), or Matrix() - LaTeX is NOT installed!**
+    - Chain methods: MathTex(r"x^2").scale(2).to_edge(UP).set_color(BLUE)
+
+    LATEX SYNTAX FOR MATHTEX:
+    - Fractions: r"\\frac{{numerator}}{{denominator}}"
+    - Exponents: r"x^2" or r"x^{{10}}"
+    - Subscripts: r"x_i" or r"x_{{i+1}}"
+    - Greek: r"\\alpha \\beta \\gamma \\theta \\pi"
+    - Integrals: r"\\int_0^1 x dx"
+    - Sums: r"\\sum_{{i=1}}^n x_i"
+    - Matrices: r"\\begin{{bmatrix}} 1 & 2 \\\\ 3 & 4 \\end{{bmatrix}}"
+    - Equations: r"ax^2 + bx + c = 0"
+
+    Examples using MathTex:
+    - MathTex(r"f(x) = x^2 + 2x + 1")
+    - MathTex(r"\\theta = 45^\\circ")
+    - MathTex(r"\\sum_{{i=1}}^n x_i")
+    - MathTex(r"E = mc^2")
+    - MathTex(r"\\pi \\approx 3.14159")
 
     BEST PRACTICES:
-    1. Use self.wait() between animations (0.5-2 seconds)
-    2. Chain transformations with .animate for smooth transitions
-    3. Group related objects with VGroup
-    4. Scale text/formulas appropriately: .scale(0.8) to .scale(2)
-    5. Use buff parameter for spacing: buff=0.5 is standard
-    6. Add run_time for better pacing: run_time=1.5
-    7. Use FadeOut to clean up before new content
-    8. Position objects before animating them when possible
+    1. **ALWAYS keep objects within frame bounds (X: -6 to 6, Y: -3 to 3)**
+    2. **Start with smaller object sizes - you can always scale up if needed**
+    3. Use self.wait() between animations (0.5-2 seconds)
+    4. Chain transformations with .animate for smooth transitions
+    5. Group related objects with VGroup and scale the group to fit: .scale(0.7)
+    6. Scale text/formulas appropriately: .scale(0.8) to .scale(1.5)
+    7. Use buff parameter for spacing: buff=0.5 is standard
+    8. Add run_time for better pacing: run_time=1.5
+    9. Use FadeOut to clean up before new content
+    10. Position objects at ORIGIN or center before animating when possible
+    11. For complex scenes with many objects, use .scale(0.6) or .scale(0.8) on the entire VGroup
 
     EXAMPLE PATTERNS:
 
     Educational Concept:
     ```python
-    title = Text("Topic").to_edge(UP)
-    # Use Text with Unicode instead of MathTex to avoid LaTeX dependency
-    formula = Text("a² + b² = c²", font_size=48)
-    explanation = Text("Explanation", font_size=24).next_to(formula, DOWN)
+    title = Text("Pythagorean Theorem").to_edge(UP)
+    formula = MathTex(r"a^2 + b^2 = c^2").scale(1.5)
+    explanation = Text("For right triangles", font_size=24).next_to(formula, DOWN)
     self.play(Write(title))
-    self.play(Create(formula))
+    self.play(Write(formula))
     self.wait(1)
     self.play(FadeIn(explanation))
     ```
@@ -162,18 +173,35 @@ def generate_manim_prompt(prompt: str) -> str:
     ```python
     axes = Axes(x_range=[-3,3], y_range=[-2,2])
     graph = axes.plot(lambda x: x**2, color=BLUE)
-    # Use Text instead of MathTex for labels
-    label = Text("y = x²", font_size=36).next_to(graph, UP)
+    label = MathTex(r"f(x) = x^2").next_to(graph, UP)
     self.play(Create(axes))
     self.play(Create(graph), Write(label))
+    ```
+
+    Avoiding Cropping (Scaling Down Complex Scenes):
+    ```python
+    # Create multiple objects
+    circle = Circle(radius=1.5, color=BLUE)
+    square = Square(side_length=1.5, color=RED).shift(RIGHT*2)
+    triangle = Triangle().shift(LEFT*2)
+    title = Text("Shapes", font_size=40).to_edge(UP)
+
+    # Group and scale to ensure everything fits
+    shapes = VGroup(circle, square, triangle)
+    shapes.scale(0.7)  # Scale down to fit comfortably in frame
+
+    self.play(Write(title))
+    self.play(Create(shapes))
     ```
 
     VALIDATION INSTRUCTIONS:
     1. Write the Manim code for the request
     2. Use code execution to validate the syntax (check imports, class definition, method syntax)
-    3. Fix any syntax errors found during validation
-    4. Return only the final, validated Python code
-    5. Ensure that the animation fits into the screen and does not go out of bounds
+    3. **CRITICAL: Verify all objects fit within frame bounds (X: -6 to 6, Y: -3 to 3)**
+    4. **Check object sizes: circles radius ≤ 1.5, squares side_length ≤ 2, text scale ≤ 1.5**
+    5. **If scene has multiple objects, scale the entire VGroup to 0.7 or 0.8 to ensure everything fits**
+    6. Fix any syntax errors found during validation
+    7. Return only the final, validated Python code that will render WITHOUT cropping
     
     Now generate code for: {prompt}
     
