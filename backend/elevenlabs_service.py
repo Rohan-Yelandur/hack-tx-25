@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime
 from settings import settings
 import os
+import base64
 
 
 class ElevenLabsService:
@@ -19,99 +20,122 @@ class ElevenLabsService:
         Path(settings.AUDIO_DIR).mkdir(exist_ok=True)
         Path(settings.SCRIPTS_DIR).mkdir(exist_ok=True)
 
-    def generate_script(self, user_prompt: str, manim_code: str) -> str:
+    def generate_script(self, user_prompt: str) -> str:
         """
         Generate an educational script using Gemini AI based on the user's question.
         Args:
             user_prompt: The user's question or topic to explain
         Returns:
-            A well-formatted educational script (optimized for 10 seconds or less)
+            A well-formatted educational script (optimized for 10-15 seconds)
         """
+        try:
+            print(f"[ElevenLabsService] Generating script for prompt: {user_prompt[:50]}...")
+            
+            full_prompt = f"""
+            You are an expert educational content creator. The user has asked the following question:
 
+            "{user_prompt}"
 
-        full_prompt = f"""
-        You are an expert educational content creator. The user has asked the following question:
+            Create a clear, concise audio script that explains this concept or answers this question.
+            The script should be suitable for narration over an educational animation video.
+            
+            Keep the explanation engaging and easy to follow. Structure your script to naturally 
+            break into segments that can be visualized (e.g., introduction, key concepts, examples, conclusion).
+            
+            Target length: 10-15 seconds of spoken content (about 30-45 words).
+            
+            Return ONLY the script text, nothing else. Do not include timestamps or labels.
+            """
 
-        "{user_prompt}"
+            response = self.gemini_client.models.generate_content(
+                model=settings.GEMINI_MODEL,
+                contents=full_prompt
+            )
 
+            script = response.text.strip()
+            print(f"[ElevenLabsService] Script generated successfully ({len(script)} chars)")
+            return script
+            
+        except Exception as e:
+            error_msg = f"Failed to generate script: {type(e).__name__}: {str(e)}"
+            print(f"[ElevenLabsService ERROR] {error_msg}")
+            import traceback
+            traceback.print_exc()
+            raise Exception(error_msg)
 
-        Create a clear, concise audio script that explains this concept or answers this question.
-        Make sure your script is based on this manim code. Read its comments in the code to 
-        create synchronized narration for the video. Follow the timestamps in the comments and match
-        what you explain to what gets displayed on the screen to the user for each time interval. In your response,
-        you should include text that should be said during a certain time interval to narrate the manim animation. Label 
-        the timestamps given from the manim code to the script so that you can match up your audio to the video as best as possible. 
-
-        
-        Manim code: {manim_code}
-
-        Return ONLY the script text, nothing else. Keep it VERY SHORT.
+    def generate_audio_with_timestamps(self, script: str) -> tuple[str, str, dict]:
         """
-
-        response = self.gemini_client.models.generate_content(
-            model=settings.GEMINI_MODEL,
-            contents=full_prompt
-        )
-
-        return response.text.strip()
-
-    def generate_audio(self, script: str) -> tuple[str, str]:
-        """
-        Generate audio file from script using ElevenLabs text-to-speech.
+        Generate audio file from script using ElevenLabs text-to-speech with timing data.
 
         Args:
             script: The text script to convert to audio
 
         Returns:
-            Tuple of (audio_file_path, script_file_path)
+            Tuple of (audio_file_path, script_file_path, timing_data)
+            timing_data contains character-level timing information
         """
-        # Generate timestamp for unique filenames
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        audio_filename = f"audio_{timestamp}.mp3"
-        script_filename = f"script_{timestamp}.txt"
+        try:
+            print(f"[ElevenLabsService] Generating audio with timestamps for script ({len(script)} chars)...")
+            
+            # Generate timestamp for unique filenames
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            audio_filename = f"audio_{timestamp}.mp3"
+            script_filename = f"script_{timestamp}.txt"
 
-        audio_path = Path(settings.AUDIO_DIR) / audio_filename
-        script_path = Path(settings.SCRIPTS_DIR) / script_filename
+            audio_path = Path(settings.AUDIO_DIR) / audio_filename
+            script_path = Path(settings.SCRIPTS_DIR) / script_filename
 
-        # Save the script to a text file
-        with open(script_path, 'w', encoding='utf-8') as f:
-            f.write(script)
+            # Save the script to a text file
+            with open(script_path, 'w', encoding='utf-8') as f:
+                f.write(script)
+            print(f"[ElevenLabsService] Script saved to {script_path}")
 
-        # Generate audio using ElevenLabs
-        audio_generator = self.elevenlabs_client.text_to_speech.convert(
-            voice_id=settings.ELEVENLABS_VOICE_ID,
-            model_id=settings.ELEVENLABS_MODEL,
-            text=script,
-            output_format="mp3_44100_128"
-        )
+            # Generate audio with timestamps using ElevenLabs
+            print(f"[ElevenLabsService] Calling ElevenLabs API for audio generation...")
+            response = self.elevenlabs_client.text_to_speech.convert_with_timestamps(
+                voice_id=settings.ELEVENLABS_VOICE_ID,
+                model_id=settings.ELEVENLABS_MODEL,
+                text=script,
+                output_format="mp3_44100_128"
+            )
+            print(f"[ElevenLabsService] Received response from ElevenLabs API")
+            print(f"[ElevenLabsService] Response type: {type(response)}")
 
-        # Save the audio file
-        with open(audio_path, 'wb') as f:
-            for chunk in audio_generator:
-                f.write(chunk)
+            # Save the audio file from base64 (response is an object, not a dict)
+            # Note: attribute is audio_base_64 with underscore, not audio_base64
+            audio_bytes = base64.b64decode(response.audio_base_64)
+            with open(audio_path, 'wb') as f:
+                f.write(audio_bytes)
+            print(f"[ElevenLabsService] Audio saved to {audio_path}")
 
-        return str(audio_path), str(script_path)
-
-    def generate_audio_from_prompt(self, user_prompt: str, manim_code: str) -> tuple[str, str, str]:
-        """
-        Complete pipeline: Generate narration script from prompt and then create audio.
-
-        Args:
-            user_prompt: The user's question or topic
-
-        Returns:
-            Tuple of (audio_file_path, script_file_path, script_text)
-        """
-
-        
-
-        # Step 1: Generate script using Gemini
-        script = self.generate_script(user_prompt, manim_code)
-
-        # Step 2: Generate audio using ElevenLabs
-        audio_path, script_path = self.generate_audio(script)
-
-        return audio_path, script_path, script
+            # Extract timing data (response.alignment is an object)
+            timing_data = {
+                'characters': response.alignment.characters,
+                'character_start_times': response.alignment.character_start_times_seconds,
+                'character_end_times': response.alignment.character_end_times_seconds
+            }
+            
+            total_duration = timing_data['character_end_times'][-1] if timing_data['character_end_times'] else 0
+            print(f"[ElevenLabsService] Audio duration: {total_duration:.2f} seconds")
+            
+            return str(audio_path), str(script_path), timing_data
+            
+        except AttributeError as e:
+            error_msg = f"Failed to extract timing data from ElevenLabs response - missing attribute: {str(e)}"
+            print(f"[ElevenLabsService ERROR] {error_msg}")
+            if 'response' in locals():
+                print(f"Response object attributes: {dir(response)}")
+            else:
+                print("No response received")
+            import traceback
+            traceback.print_exc()
+            raise Exception(error_msg)
+        except Exception as e:
+            error_msg = f"Failed to generate audio with timestamps: {type(e).__name__}: {str(e)}"
+            print(f"[ElevenLabsService ERROR] {error_msg}")
+            import traceback
+            traceback.print_exc()
+            raise Exception(error_msg)
 
 
 # Create singleton instance

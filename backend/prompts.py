@@ -170,3 +170,67 @@ def generate_manim_prompt(prompt: str) -> str:
     
     Now generate code for: {prompt}
     """
+
+
+def generate_manim_from_script_prompt(user_prompt: str, script: str, timing_data: dict) -> str:
+    """
+    Generate a prompt for creating Manim code synchronized with an audio script.
+    
+    Args:
+        user_prompt: The original user request
+        script: The narration script that will be spoken
+        timing_data: Character-level timing data from ElevenLabs
+    """
+    
+    # Calculate total audio duration
+    total_duration = timing_data['character_end_times'][-1] if timing_data['character_end_times'] else 10
+    
+    return f"""You are an expert at generating Manim (Mathematical Animation Engine) code synchronized with audio narration.
+
+USER REQUEST: {user_prompt}
+
+AUDIO NARRATION SCRIPT:
+"{script}"
+
+AUDIO DURATION: {total_duration:.2f} seconds
+
+Your task is to generate Manim code that creates a visual animation synchronized with this narration.
+The animation should match the pacing and content of the audio script.
+
+CRITICAL REQUIREMENTS:
+1. Create a class called {settings.SCENE_CLASS_NAME} that inherits from Scene
+2. Implement the construct() method where all animations happen
+3. Start with: from manim import *
+4. **TOTAL ANIMATION TIME MUST BE {total_duration:.2f} seconds to match the audio**
+5. USE CODE EXECUTION to validate your Python code for syntax errors before returning it
+6. Return ONLY valid, syntactically correct Python code, no explanations or markdown
+
+SYNCHRONIZATION GUIDELINES:
+1. Break the script into logical segments (e.g., introduction, main concept, example, conclusion)
+2. Time your animations to match when those segments would be spoken in the narration
+3. Use self.wait() to control pacing and match the audio timing
+4. Plan animations so visual changes align with key words/phrases in the narration
+5. The total sum of all run_time and wait() calls should equal approximately {total_duration:.2f} seconds
+
+EXAMPLE TIMING BREAKDOWN:
+- If the script is 10 seconds and has 3 key points, allocate roughly 3-4 seconds per point
+- Use run_time parameter: self.play(Create(obj), run_time=2)
+- Add pauses: self.wait(1.5) between major transitions
+- Keep animations smooth and not too fast
+
+Use these manim docs to help you when generating code: {manim_docs}
+    
+VALIDATION INSTRUCTIONS:
+1. Write the Manim code that visualizes the narration
+2. Use code execution to validate the syntax (check imports, class definition, method syntax)
+3. **CRITICAL: Verify all objects fit within frame bounds (X: -6 to 6, Y: -3 to 3)**
+4. **Check object sizes: circles radius ≤ 1.5, squares side_length ≤ 2, text scale ≤ 1.5**
+5. **If scene has multiple objects, scale the entire VGroup to 0.7 or 0.8 to ensure everything fits**
+6. **Verify total animation time matches {total_duration:.2f} seconds**
+7. Fix any syntax errors found during validation
+8. Return only the final, validated Python code that will render WITHOUT cropping
+
+Remember: Use code execution to validate your code before returning it!
+    
+Now generate synchronized Manim code for this narration.
+"""
