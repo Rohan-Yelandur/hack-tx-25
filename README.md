@@ -2,21 +2,6 @@
 
 AI-powered Manim video generator with a React frontend and Flask backend.
 
-## Project Structure
-
-```
-hack-tx-25/
-├── backend/
-│   ├── app.py              # Flask API server
-│   ├── requirements.txt    # Python dependencies
-│   ├── manim_code/        # Generated Manim scripts
-│   └── manim_videos/      # Rendered videos
-└── frontend/
-    ├── src/
-    │   ├── App.js         # React main component
-    │   └── App.css        # Styling
-    └── package.json       # Node dependencies
-```
 
 ## Setup Instructions
 
@@ -83,18 +68,3 @@ The frontend will run on `http://localhost:3000`
 - `GET /api/video/<filename>` - Serve video files
 - `GET /api/script/<filename>` - Serve script files
 - `GET /api/health` - Health check endpoint
-
-## Features
-
-- 🤖 AI-powered Manim code generation using Google Gemini
-- 🎬 Automatic video rendering with ffmpeg
-- 💾 Organized file storage with topic-based naming
-- 🌐 React frontend with real-time video playback
-- 📝 View generated Manim code
-- 🎨 Beautiful gradient UI
-
-## File Naming Convention
-
-Files are saved with the format: `<topic>_<timestamp>`
-
-Example: `shapes_20251018_143022.py` and `shapes_20251018_143022.mp4`
