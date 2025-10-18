@@ -67,8 +67,7 @@ function VideoGenerator() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt,
-          generate_audio: true
+          prompt
         }),
       });
 
@@ -76,11 +75,11 @@ function VideoGenerator() {
 
       if (data.success) {
         // Only show content when BOTH video and audio are ready
-        if (data.video_url && data.narration_audio_url) {
+        if (data.video_url && data.audio_url) {
           setVideoUrl(`${API_BASE_URL}${data.video_url}`);
           setManimCode(data.manim_code);
-          setNarrationScript(data.narration_script);
-          setAudioUrl(`${API_BASE_URL}${data.narration_audio_url}`);
+          setNarrationScript(data.script_text);
+          setAudioUrl(`${API_BASE_URL}${data.audio_url}`);
           setShowContent(true);
         } else {
           setError('Video or audio generation incomplete');

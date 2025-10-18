@@ -30,14 +30,26 @@ Server will start on `http://localhost:5000`
 ## API Endpoints
 
 ### POST `/api/generate-video`
+Generates a Manim animation video with synchronized AI narration (parallel processing).
 ```json
 {
-  "prompt": "Create a circle that transforms into a square",
-  "generate_audio": false
+  "prompt": "Explain the Pythagorean theorem with a visual proof"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "video_url": "/api/manim-video/20251018_143022.mp4",
+  "audio_url": "/api/elevenlabs-audio/audio_20251018_143022.mp3",
+  "manim_code": "from manim import *\n...",
+  "script_text": "The Pythagorean theorem states..."
 }
 ```
 
 ### POST `/api/generate-narration`
+Generates standalone narration script and audio (without video).
 ```json
 {
   "prompt": "Explain how AI works"

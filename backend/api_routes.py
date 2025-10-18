@@ -3,6 +3,7 @@ from pathlib import Path
 from gemini_service import gemini_service
 from elevenlabs_service import eleven_labs_service
 from manim_service import manim_service
+import threading
 
 
 def register_routes(app):
@@ -10,50 +11,79 @@ def register_routes(app):
     
     @app.route('/api/generate-video', methods=['POST'])
     def generate_video():
-        """Generate a complete video with narration from a prompt."""
+        """Generate a Manim video with synchronized narration using parallel processing."""
         data = request.json
         prompt = data.get('prompt', '')
-        generate_audio = data.get('generate_audio', False)
         
         if not prompt:
             return jsonify({'error': 'Prompt is required'}), 400
         
         try:
-            # Generate Manim code
+            # Step 1: Generate Manim code with detailed comments for narration
             manim_code = gemini_service.generate_manim_code(prompt)
             
-            # Render video
-            video_path, script_path = manim_service.render_manim_video(manim_code)
+            # Prepare storage for parallel results
+            video_result = {'path': None, 'script_path': None, 'error': None}
+            audio_result = {'audio_path': None, 'script_path': None, 'script_text': None, 'error': None}
             
-            if not video_path:
-                return jsonify({
-                    'success': False,
-                    'error': 'Failed to render video',
-                    'manim_script_url': f'/api/manim-code/{Path(script_path).name}'
-                }), 500
+            # Thread 1: Render Manim video
+            def render_video():
+                try:
+                    video_path, script_path = manim_service.render_manim_video(manim_code)
+                    video_result['path'] = video_path
+                    video_result['script_path'] = script_path
+                except Exception as e:
+                    video_result['error'] = str(e)
             
-            video_filename = Path(video_path).name
-            manim_script_filename = Path(script_path).name
+            # Thread 2: Generate narration from Manim code comments, then create audio
+            def generate_narration():
+                try:
+                    # Use Manim code comments to generate synchronized narration
+                    audio_path, script_path, script_text = eleven_labs_service.generate_audio_from_prompt(prompt, manim_code)
+                    audio_result['audio_path'] = audio_path
+                    audio_result['script_path'] = script_path
+                    audio_result['script_text'] = script_text
+                except Exception as e:
+                    audio_result['error'] = str(e)
             
-            response_data = {
+            # Start both threads in parallel
+            video_thread = threading.Thread(target=render_video)
+            audio_thread = threading.Thread(target=generate_narration)
+            
+            video_thread.start()
+            audio_thread.start()
+            
+            # Wait for both to complete
+            video_thread.join()
+            audio_thread.join()
+            
+            # Build response
+            response = {
                 'success': True,
-                'video_url': f'/api/manim-video/{video_filename}',
-                'manim_code_url': f'/api/manim-code/{manim_script_filename}',
                 'manim_code': manim_code
             }
             
-            # Optionally generate narration
-            if generate_audio:
-                audio_path, script_path, narration_script = eleven_labs_service.generate_audio_from_prompt(prompt)
-                
-                if audio_path:
-                    audio_filename = Path(audio_path).name
-                    script_filename = Path(script_path).name
-                    response_data['narration_script_url'] = f'/api/elevenlabs-script/{script_filename}'
-                    response_data['narration_audio_url'] = f'/api/elevenlabs-audio/{audio_filename}'
-                    response_data['narration_script'] = narration_script
+            # Add video results
+            if video_result['path']:
+                response['video_url'] = f'/api/manim-video/{Path(video_result["path"]).name}'
+                response['manim_code_url'] = f'/api/manim-code/{Path(video_result["script_path"]).name}'
+            else:
+                response['video_error'] = video_result['error'] or 'Failed to render video'
+                response['success'] = False
             
-            return jsonify(response_data)
+            # Add audio results
+            if audio_result['audio_path']:
+                response['audio_url'] = f'/api/elevenlabs-audio/{Path(audio_result["audio_path"]).name}'
+                response['script_url'] = f'/api/elevenlabs-script/{Path(audio_result["script_path"]).name}'
+                response['script_text'] = audio_result['script_text']
+            else:
+                response['audio_error'] = audio_result['error'] or 'Failed to generate audio'
+            
+            # Return error if both failed
+            if not video_result['path'] and not audio_result['audio_path']:
+                return jsonify(response), 500
+            
+            return jsonify(response)
             
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -69,8 +99,8 @@ def register_routes(app):
             return jsonify({'error': 'Prompt is required'}), 400
         
         try:
-            # Generate script and audio
-            audio_path, script_path, narration_script = eleven_labs_service.generate_audio_from_prompt(prompt)
+            # For standalone narration, generate without manim code context
+            audio_path, script_path, narration_script = eleven_labs_service.generate_audio_from_prompt(prompt, "")
             
             audio_filename = Path(audio_path).name
             script_filename = Path(script_path).name

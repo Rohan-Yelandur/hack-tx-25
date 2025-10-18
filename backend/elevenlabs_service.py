@@ -19,32 +19,31 @@ class ElevenLabsService:
         Path(settings.AUDIO_DIR).mkdir(exist_ok=True)
         Path(settings.SCRIPTS_DIR).mkdir(exist_ok=True)
 
-    def generate_script(self, user_prompt: str) -> str:
+    def generate_script(self, user_prompt: str, manim_code: str) -> str:
         """
         Generate an educational script using Gemini AI based on the user's question.
-
         Args:
             user_prompt: The user's question or topic to explain
-
         Returns:
             A well-formatted educational script (optimized for 10 seconds or less)
         """
+
+
         full_prompt = f"""
         You are an expert educational content creator. The user has asked the following question:
 
         "{user_prompt}"
 
-        Create a clear, concise audio script that explains this concept or answers this question.
 
-        CRITICAL REQUIREMENTS:
-        - The script MUST be short enough to be spoken in 10 SECONDS OR LESS
-        - Aim for approximately 20-30 WORDS MAXIMUM (average speaking rate is 2-3 words per second)
-        - Write in a conversational, friendly tone suitable for audio narration
-        - Get straight to the point - no introductions or filler
-        - Focus on the core answer or most important concept only
-        - Use simple, clear language
-        - Don't include stage directions or sound effects - just the spoken content
-        - Write as if you're talking directly to the listener
+        Create a clear, concise audio script that explains this concept or answers this question.
+        Make sure your script is based on this manim code. Read its comments in the code to 
+        create synchronized narration for the video. Follow the timestamps in the comments and match
+        what you explain to what gets displayed on the screen to the user for each time interval. In your response,
+        you should include text that should be said during a certain time interval to narrate the manim animation. Label 
+        the timestamps given from the manim code to the script so that you can match up your audio to the video as best as possible. 
+
+        
+        Manim code: {manim_code}
 
         Return ONLY the script text, nothing else. Keep it VERY SHORT.
         """
@@ -93,9 +92,9 @@ class ElevenLabsService:
 
         return str(audio_path), str(script_path)
 
-    def generate_audio_from_prompt(self, user_prompt: str) -> tuple[str, str, str]:
+    def generate_audio_from_prompt(self, user_prompt: str, manim_code: str) -> tuple[str, str, str]:
         """
-        Complete pipeline: Generate script from prompt and then create audio.
+        Complete pipeline: Generate narration script from prompt and then create audio.
 
         Args:
             user_prompt: The user's question or topic
@@ -103,8 +102,11 @@ class ElevenLabsService:
         Returns:
             Tuple of (audio_file_path, script_file_path, script_text)
         """
+
+        
+
         # Step 1: Generate script using Gemini
-        script = self.generate_script(user_prompt)
+        script = self.generate_script(user_prompt, manim_code)
 
         # Step 2: Generate audio using ElevenLabs
         audio_path, script_path = self.generate_audio(script)

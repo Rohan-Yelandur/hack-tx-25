@@ -1,18 +1,7 @@
 from settings import settings
 
-def generate_manim_prompt(prompt: str) -> str:
-    return f"""You are an expert at generating Manim (Mathematical Animation Engine) code. Generate Python code for Manim Community Edition based on this request: {prompt}
-
-    CRITICAL REQUIREMENTS:
-    1. Create a class called {settings.SCENE_CLASS_NAME} that inherits from Scene
-    2. Implement the construct() method where all animations happen
-    3. Start with: from manim import *
-    4. USE CODE EXECUTION to validate your Python code for syntax errors before returning it
-    5. Return ONLY valid, syntactically correct Python code, no explanations or markdown
-    6. Target 5-15 seconds total animation time
-    7. Test imports and basic syntax using code execution to ensure no errors
-
-    CORE STRUCTURE:
+manim_docs = f'''
+CORE STRUCTURE:
     ```python
     from manim import *
 
@@ -21,18 +10,6 @@ def generate_manim_prompt(prompt: str) -> str:
             # Your animations here
             pass
     ```
-
-    ESSENTIAL MOBJECTS (Visual Objects):
-    - Text & Math:
-      * Text("Hello") - Use for regular text
-      * MathTex(r"\\frac{{a}}{{b}}") - For mathematical expressions with LaTeX formatting
-      * Tex(r"\\LaTeX") - For LaTeX text rendering
-      * MarkupText("<b>Bold</b>") - For styled text with HTML-like tags
-    - Shapes: Circle(), Square(), Rectangle(), Triangle(), Polygon(), RegularPolygon(n=6)
-    - Lines & Arrows: Line(start, end), Arrow(start, end), Vector([x,y]), Dot(point)
-    - Graphs: Axes(), NumberPlane(), FunctionGraph(lambda x: x**2)
-    - 3D: Sphere(), Cube(), Cone(), Surface()
-    - Groups: VGroup(obj1, obj2) for grouping objects
 
     CORE ANIMATIONS (use with self.play()):
     - Creation: Create(obj), Write(obj), DrawBorderThenFill(obj), FadeIn(obj)
@@ -99,31 +76,6 @@ def generate_manim_prompt(prompt: str) -> str:
     - opacity=0.5: Transparency (0=invisible, 1=opaque)
     - fill_opacity=0.7: Fill transparency for shapes
     - stroke_width=4: Line thickness
- 
-
-    MATH & TEXT TIPS:
-    - Text() for simple text: Text("E = mc²").scale(1)
-    - MathTex() for professional math formatting: MathTex(r"E = mc^2", r"\frac{a}{b}", r"\int_0^1 x^2 dx")
-    - Tex() for LaTeX text rendering: Tex(r"The equation is: ", r"$x^2 + y^2 = r^2$")
-    - MarkupText() for styled text: MarkupText("<b>Bold</b> <i>Italic</i>")
-    - Chain methods: MathTex(r"x^2").scale(2).to_edge(UP).set_color(BLUE)
-
-    LATEX SYNTAX FOR MATHTEX:
-    - Fractions: r"\\frac{{numerator}}{{denominator}}"
-    - Exponents: r"x^2" or r"x^{{10}}"
-    - Subscripts: r"x_i" or r"x_{{i+1}}"
-    - Greek: r"\\alpha \\beta \\gamma \\theta \\pi"
-    - Integrals: r"\\int_0^1 x dx"
-    - Sums: r"\\sum_{{i=1}}^n x_i"
-    - Matrices: r"\\begin{{bmatrix}} 1 & 2 \\\\ 3 & 4 \\end{{bmatrix}}"
-    - Equations: r"ax^2 + bx + c = 0"
-
-    Examples using MathTex:
-    - MathTex(r"f(x) = x^2 + 2x + 1")
-    - MathTex(r"\\theta = 45^\\circ")
-    - MathTex(r"\\sum_{{i=1}}^n x_i")
-    - MathTex(r"E = mc^2")
-    - MathTex(r"\\pi \\approx 3.14159")
 
     BEST PRACTICES:
     1. **ALWAYS keep objects within frame bounds (X: -6 to 6, Y: -3 to 3)**
@@ -160,15 +112,6 @@ def generate_manim_prompt(prompt: str) -> str:
     self.wait()
     ```
 
-    Multi-step Process:
-    ```python
-    steps = VGroup(*[Text(f"Step {{i}}") for i in range(1,4)])
-    steps.arrange(DOWN, buff=0.8)
-    for step in steps:
-        self.play(Write(step))
-        self.wait(0.5)
-    ```
-
     Graph Visualization:
     ```python
     axes = Axes(x_range=[-3,3], y_range=[-2,2])
@@ -193,7 +136,28 @@ def generate_manim_prompt(prompt: str) -> str:
     self.play(Write(title))
     self.play(Create(shapes))
     ```
+'''
 
+
+def generate_manim_prompt(prompt: str) -> str:
+    return f"""You are an expert at generating Manim (Mathematical Animation Engine) code. Generate Python code for Manim Community Edition based on this request: {prompt}
+
+    CRITICAL REQUIREMENTS:
+    1. Create a class called {settings.SCENE_CLASS_NAME} that inherits from Scene
+    2. Implement the construct() method where all animations happen
+    3. Start with: from manim import *
+    4. USE CODE EXECUTION to validate your Python code for syntax errors before returning it
+    5. Return ONLY valid, syntactically correct Python code, no explanations or markdown
+    6. Target 5-15 seconds total animation time
+    7. Test imports and basic syntax using code execution to ensure no errors
+    8. You need to add comments above each section of code within each time interval specified by the play() run_time 
+       and the wait() calls and also a description of what is being displayed/explained for specifically that block of code.
+       Your comments should include specific time stamps for how long you think that section of code will take to run.
+       Do not include any other unnecessary information in the comments.
+
+       
+  Use these manim docs to help you when generating code: {manim_docs}
+    
     VALIDATION INSTRUCTIONS:
     1. Write the Manim code for the request
     2. Use code execution to validate the syntax (check imports, class definition, method syntax)
@@ -202,7 +166,7 @@ def generate_manim_prompt(prompt: str) -> str:
     5. **If scene has multiple objects, scale the entire VGroup to 0.7 or 0.8 to ensure everything fits**
     6. Fix any syntax errors found during validation
     7. Return only the final, validated Python code that will render WITHOUT cropping
+    Remember: Use code execution to validate your code before returning it!
     
     Now generate code for: {prompt}
-    
-    Remember: Use code execution to validate your code before returning it!"""
+    """
