@@ -38,9 +38,11 @@ class ElevenLabsService:
         Create a clear, concise audio script that explains this concept or answers this question.
         Make sure your script is based on this manim code. Read its comments in the code to 
         create synchronized narration for the video. Follow the timestamps in the comments and match
-        what you explain to what gets displayed on the screen to the user for each time interval. In your response,
-        you should include text that should be said during a certain time interval to narrate the manim animation. Label 
-        the timestamps given from the manim code to the script so that you can match up your audio to the video as best as possible. 
+        what you explain to what gets displayed on the screen to the user for each time interval.
+        Estimate the speed of speaking the text to manim drawings as best you can.
+        Don't include anything in the narration script about actual timing estimates.
+        
+        In order to reduce narration length, remove introductions, and filler words.
 
         
         Manim code: {manim_code}
@@ -82,7 +84,13 @@ class ElevenLabsService:
             voice_id=settings.ELEVENLABS_VOICE_ID,
             model_id=settings.ELEVENLABS_MODEL,
             text=script,
-            output_format="mp3_44100_128"
+            output_format="mp3_44100_128",
+            voice_settings={
+                "stability": settings.ELEVENLABS_STABILITY,
+                "similarity_boost": settings.ELEVENLABS_SIMILARITY,
+                "style": settings.ELEVENLABS_STYLE,
+                "speed": settings.ELEVENLABS_SPEED
+            }
         )
 
         # Save the audio file
