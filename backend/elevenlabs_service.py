@@ -39,6 +39,8 @@ class ElevenLabsService:
         Make sure your script is based on this manim code. Read its comments in the code to 
         create synchronized narration for the video. Follow the timestamps in the comments and match
         what you explain to what gets displayed on the screen to the user for each time interval.
+        When writing math equations or operations, write the actual word in the script
+        rather than notation.
         Estimate the speed of speaking the text to manim drawings as best you can.
         Don't include anything in the narration script about actual timing estimates.
         

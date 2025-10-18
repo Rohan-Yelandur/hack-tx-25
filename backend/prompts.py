@@ -146,11 +146,9 @@ def generate_manim_prompt(prompt: str) -> str:
     1. Create a class called {settings.SCENE_CLASS_NAME} that inherits from Scene
     2. Implement the construct() method where all animations happen
     3. Start with: from manim import *
-    4. USE CODE EXECUTION to validate your Python code for syntax errors before returning it
-    5. Return ONLY valid, syntactically correct Python code, no explanations or markdown
-    6. Target 5-15 seconds total animation time
-    7. Test imports and basic syntax using code execution to ensure no errors
-    8. You need to add comments above each section of code within each time interval specified by the play() run_time 
+    4. Return ONLY valid, syntactically correct Python code, no explanations or markdown
+    5. Target 5-15 seconds total animation time
+    6. You need to add comments above each section of code within each time interval specified by the play() run_time 
        and the wait() calls and also a description of what is being displayed/explained for specifically that block of code.
        Your comments should include specific time stamps for how long you think that section of code will take to run.
        Do not include any other unnecessary information in the comments.
@@ -158,15 +156,12 @@ def generate_manim_prompt(prompt: str) -> str:
        
   Use these manim docs to help you when generating code: {manim_docs}
     
-    VALIDATION INSTRUCTIONS:
-    1. Write the Manim code for the request
-    2. Use code execution to validate the syntax (check imports, class definition, method syntax)
-    3. **CRITICAL: Verify all objects fit within frame bounds (X: -6 to 6, Y: -3 to 3)**
-    4. **Check object sizes: circles radius ≤ 1.5, squares side_length ≤ 2, text scale ≤ 1.5**
-    5. **If scene has multiple objects, scale the entire VGroup to 0.7 or 0.8 to ensure everything fits**
-    6. Fix any syntax errors found during validation
-    7. Return only the final, validated Python code that will render WITHOUT cropping
-    Remember: Use code execution to validate your code before returning it!
+    IMPORTANT GUIDELINES:
+    1. Write clean, working Manim code for the request
+    2. **CRITICAL: Verify all objects fit within frame bounds (X: -6 to 6, Y: -3 to 3)**
+    3. **Check object sizes: circles radius ≤ 1.5, squares side_length ≤ 2, text scale ≤ 1.5**
+    4. **If scene has multiple objects, scale the entire VGroup to 0.7 or 0.8 to ensure everything fits**
+    5. Return only the final Python code that will render WITHOUT cropping
     
     Now generate code for: {prompt}
     """
