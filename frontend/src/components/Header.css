@@ -1,17 +1,20 @@
 .header {
-  padding: 2rem;
-  text-align: center;
-  color: white;
+  padding: 2rem 2rem 1rem;
+  position: relative;
+  z-index: 10;
 }
 
-.header h1 {
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #e8e9ed;
+  letter-spacing: 0.1em;
   margin: 0;
-  font-size: 2.5rem;
-  font-weight: bold;
-}
-
-.header p {
-  margin: 0.5rem 0 0;
-  font-size: 1.1rem;
+  text-transform: uppercase;
   opacity: 0.9;
 }

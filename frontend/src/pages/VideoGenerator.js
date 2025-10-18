@@ -46,21 +46,26 @@ function VideoGenerator() {
 
   return (
     <div className="video-generator">
+      {/* Input Section */}
       <div className="input-section">
+        <h2 className="input-title">
+          Generate <span className="highlight-cyan">Animations</span> with AI
+        </h2>
         <div className="form-group">
-          <label htmlFor="prompt">Prompt:</label>
+          <label htmlFor="prompt">Describe Your Animation</label>
           <textarea
             id="prompt"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe the animation you want to create..."
-            rows="4"
+            placeholder="Example: Visualize the Pythagorean theorem with rotating triangles..."
+            rows="5"
             disabled={loading}
+            className="prompt-input"
           />
         </div>
 
-        <button 
-          onClick={handleGenerate} 
+        <button
+          onClick={handleGenerate}
           disabled={loading}
           className="generate-btn"
         >
@@ -68,36 +73,43 @@ function VideoGenerator() {
         </button>
       </div>
 
+      {/* Error Message */}
       {error && (
-        <div className="error-message">
-          <p>❌ {error}</p>
+        <div className="message-card error-message">
+          <div className="message-icon">✕</div>
+          <p>{error}</p>
         </div>
       )}
 
+      {/* Loading Message */}
       {loading && (
-        <div className="loading-message">
-          <p>🎬 Generating your animation... This may take a minute.</p>
+        <div className="message-card loading-message">
+          <div className="loading-spinner"></div>
+          <p>Generating your animation... This may take a minute.</p>
         </div>
       )}
 
+      {/* Video Section */}
       {videoUrl && (
         <div className="video-section">
-          <h2>Generated Video</h2>
-          <video 
-            controls 
-            autoPlay 
-            loop
-            key={videoUrl}
-            className="video-player"
-          >
-            <source src={videoUrl} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+          <h2 className="section-title">Your Animation</h2>
+          <div className="video-container">
+            <video
+              controls
+              autoPlay
+              loop
+              key={videoUrl}
+              className="video-player"
+            >
+              <source src={videoUrl} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
 
           {manimCode && (
             <details className="code-section">
-              <summary>View Generated Code</summary>
-              <pre>{manimCode}</pre>
+              <summary className="code-summary">View Generated Code</summary>
+              <pre className="code-block">{manimCode}</pre>
             </details>
           )}
         </div>
