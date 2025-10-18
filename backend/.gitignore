@@ -1,13 +1,15 @@
 # Environment
 .env
-\venv
+.venv
 
-# Manim output folders
+# Video output folders
 manim_code
 manim_videos
-audio_files
-audio_scripts
+
+# Audio output folders
+elevenlabs_audio
+elevenlabs_scripts
 venv
 
-#
+# Cache
 __pycache__
