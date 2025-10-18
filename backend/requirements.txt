@@ -1,0 +1,26 @@
+# Flask and Web Framework
+Flask==3.0.0
+Flask-CORS==4.0.0
+Werkzeug==3.0.1
+
+# Google Generative AI (Gemini)
+google-generativeai==0.3.2
+
+# Eleven Labs
+elevenlabs==0.2.27
+requests==2.31.0
+
+# Manim for video generation
+manim==0.18.0
+Pillow==10.1.0
+
+# File handling
+python-multipart==0.0.6
+PyPDF2==3.0.1
+
+# Environment variables
+python-dotenv==1.0.0
+
+# Utilities
+pydantic==2.5.2
+
