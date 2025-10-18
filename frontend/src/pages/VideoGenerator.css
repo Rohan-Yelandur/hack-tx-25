@@ -202,6 +202,58 @@
   background: #000;
 }
 
+/* Audio Section */
+.audio-section {
+  margin: 2rem 0;
+  padding: 2rem;
+  background: rgba(10, 14, 26, 0.4);
+  border-radius: 12px;
+  border: 1px solid rgba(77, 212, 232, 0.2);
+}
+
+.section-subtitle {
+  font-size: 1.5rem;
+  color: #4dd4e8;
+  margin: 0 0 1.5rem;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.audio-player {
+  width: 100%;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  outline: none;
+}
+
+.audio-player::-webkit-media-controls-panel {
+  background: rgba(26, 31, 53, 0.8);
+}
+
+.narration-script {
+  padding: 1.5rem;
+  background: rgba(139, 127, 216, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid #8b7fd8;
+}
+
+.script-label {
+  font-size: 0.9rem;
+  color: #8b7fd8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.75rem;
+}
+
+.script-text {
+  font-size: 1.1rem;
+  color: #e8e9ed;
+  line-height: 1.6;
+  margin: 0;
+  font-style: italic;
+}
+
 /* Code Section */
 .code-section {
   margin-top: 2rem;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { API_BASE_URL } from '../config/constants';
 import './VideoGenerator.css';
 
@@ -8,6 +8,43 @@ function VideoGenerator() {
   const [videoUrl, setVideoUrl] = useState('');
   const [error, setError] = useState('');
   const [manimCode, setManimCode] = useState('');
+  const [narrationScript, setNarrationScript] = useState('');
+  const [audioUrl, setAudioUrl] = useState('');
+  const [showContent, setShowContent] = useState(false);
+
+  const videoRef = useRef(null);
+  const audioRef = useRef(null);
+
+  // Synchronize audio with video playback
+  useEffect(() => {
+    const video = videoRef.current;
+    const audio = audioRef.current;
+
+    if (!video || !audio) return;
+
+    const syncPlay = () => {
+      audio.currentTime = video.currentTime;
+      audio.play();
+    };
+
+    const syncPause = () => {
+      audio.pause();
+    };
+
+    const syncSeeking = () => {
+      audio.currentTime = video.currentTime;
+    };
+
+    video.addEventListener('play', syncPlay);
+    video.addEventListener('pause', syncPause);
+    video.addEventListener('seeking', syncSeeking);
+
+    return () => {
+      video.removeEventListener('play', syncPlay);
+      video.removeEventListener('pause', syncPause);
+      video.removeEventListener('seeking', syncSeeking);
+    };
+  }, [showContent]);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -19,21 +56,35 @@ function VideoGenerator() {
     setError('');
     setVideoUrl('');
     setManimCode('');
+    setNarrationScript('');
+    setAudioUrl('');
+    setShowContent(false);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/generate`, {
+      const response = await fetch(`${API_BASE_URL}/api/generate-video`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({
+          prompt,
+          generate_audio: true
+        }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setVideoUrl(`${API_BASE_URL}${data.video_url}`);
-        setManimCode(data.manim_code);
+        // Only show content when BOTH video and audio are ready
+        if (data.video_url && data.narration_audio_url) {
+          setVideoUrl(`${API_BASE_URL}${data.video_url}`);
+          setManimCode(data.manim_code);
+          setNarrationScript(data.narration_script);
+          setAudioUrl(`${API_BASE_URL}${data.narration_audio_url}`);
+          setShowContent(true);
+        } else {
+          setError('Video or audio generation incomplete');
+        }
       } else {
         setError(data.error || 'Failed to generate video');
       }
@@ -90,21 +141,38 @@ function VideoGenerator() {
       )}
 
       {/* Video Section */}
-      {videoUrl && (
+      {showContent && (
         <div className="video-section">
           <h2 className="section-title">Your Animation</h2>
           <div className="video-container">
             <video
+              ref={videoRef}
               controls
-              autoPlay
-              loop
               key={videoUrl}
               className="video-player"
             >
               <source src={videoUrl} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
+            {/* Hidden audio element that syncs with video */}
+            <audio
+              ref={audioRef}
+              style={{ display: 'none' }}
+              key={audioUrl}
+            >
+              <source src={audioUrl} type="audio/mpeg" />
+            </audio>
           </div>
+
+          {/* Narration Script Display */}
+          {narrationScript && (
+            <div className="audio-section">
+              <h3 className="section-subtitle">AI Narration Script</h3>
+              <div className="narration-script">
+                <p className="script-text">{narrationScript}</p>
+              </div>
+            </div>
+          )}
 
           {manimCode && (
             <details className="code-section">
