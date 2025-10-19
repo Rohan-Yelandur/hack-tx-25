@@ -1,65 +1,29 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../config/constants';
+import { useLessonContext } from '../context/LessonContext';
 import './VideoGenerator.css';
 
 function VideoGenerator() {
-  const [prompt, setPrompt] = useState('');
-  const [loading, setLoading] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
+  const { currentLesson, updateLesson, clearLesson } = useLessonContext();
+  
+  const [prompt, setPrompt] = useState(currentLesson.prompt || '');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [manimCode, setManimCode] = useState('');
-  const [narrationScript, setNarrationScript] = useState('');
-  const [audioUrl, setAudioUrl] = useState('');
-  const [showContent, setShowContent] = useState(false);
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfPreview, setPdfPreview] = useState(null);
-  const [videoId, setVideoId] = useState('');
-  const [sharedToCommunity, setSharedToCommunity] = useState(false);
   const [sharingLoading, setSharingLoading] = useState(false);
 
   const videoRef = useRef(null);
-  const audioRef = useRef(null);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
 
-  // Synchronize audio with video playback
+  // Initialize from context when component mounts
   useEffect(() => {
-    const video = videoRef.current;
-    const audio = audioRef.current;
-
-    // Skip sync if no audio URL or refs are missing
-    if (!video || !audio || !audioUrl) return;
-
-    const syncPlay = () => {
-      if (audioUrl) {
-        audio.currentTime = video.currentTime;
-        audio.play().catch(err => console.log('Audio play failed:', err));
-      }
-    };
-
-    const syncPause = () => {
-      if (audioUrl) {
-        audio.pause();
-      }
-    };
-
-    const syncSeeking = () => {
-      if (audioUrl) {
-        audio.currentTime = video.currentTime;
-      }
-    };
-
-    video.addEventListener('play', syncPlay);
-    video.addEventListener('pause', syncPause);
-    video.addEventListener('seeking', syncSeeking);
-
-    return () => {
-      video.removeEventListener('play', syncPlay);
-      video.removeEventListener('pause', syncPause);
-      video.removeEventListener('seeking', syncSeeking);
-    };
-  }, [showContent, audioUrl]);
+    if (currentLesson.hasContent) {
+      setPrompt(currentLesson.prompt);
+    }
+  }, [currentLesson.hasContent, currentLesson.prompt]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -94,7 +58,7 @@ function VideoGenerator() {
   };
 
   const handleShareToCommunity = async () => {
-    if (!videoId) {
+    if (!currentLesson.videoId) {
       setError('No video to share');
       return;
     }
@@ -103,7 +67,7 @@ function VideoGenerator() {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/videos/${videoId}/share-to-community`, {
+      const response = await fetch(`${API_BASE_URL}/api/videos/${currentLesson.videoId}/share-to-community`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -113,7 +77,7 @@ function VideoGenerator() {
       const data = await response.json();
 
       if (data.success) {
-        setSharedToCommunity(true);
+        updateLesson({ sharedToCommunity: true });
       } else {
         setError(data.error || 'Failed to share video');
       }
@@ -121,6 +85,17 @@ function VideoGenerator() {
       setError('Failed to connect to server: ' + err.message);
     } finally {
       setSharingLoading(false);
+    }
+  };
+
+  const handleNewLesson = () => {
+    clearLesson();
+    setPrompt('');
+    setError('');
+    setPdfFile(null);
+    setPdfPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -132,13 +107,6 @@ function VideoGenerator() {
 
     setLoading(true);
     setError('');
-    setVideoUrl('');
-    setManimCode('');
-    setNarrationScript('');
-    setAudioUrl('');
-    setShowContent(false);
-    setVideoId('');
-    setSharedToCommunity(false);
 
     try {
       const formData = new FormData();
@@ -156,21 +124,18 @@ function VideoGenerator() {
       console.log('API Response:', data); // Debug log
 
       if (data.success) {
-        // Show content even if only video is ready (audio is optional)
-        if (data.video_url) {
-          setVideoUrl(`${API_BASE_URL}${data.video_url}`);
-          setManimCode(data.manim_code || '');
-          setNarrationScript(data.script_text || '');
-          setAudioUrl(`${API_BASE_URL}${data.audio_url}`);
-          setVideoId(data.video_id || '');
-          setShowContent(true);
-          
-          // Log warnings if audio failed
-          if (!data.audio_url && data.audio_error) {
-            console.warn('Audio generation failed:', data.audio_error);
-          }
+        // Use the final combined video with embedded audio
+        if (data.final_video_url) {
+          // Update the lesson context with new data
+          updateLesson({
+            prompt: prompt,
+            videoUrl: `${API_BASE_URL}${data.final_video_url}`,
+            narrationScript: data.script_text || '',
+            videoId: data.video_id || '',
+            sharedToCommunity: false,
+          });
         } else {
-          setError(data.video_error || 'Failed to generate video');
+          setError(data.video_error || data.audio_error || 'Failed to generate video');
         }
       } else {
         setError(data.error || 'Failed to generate video');
@@ -300,14 +265,27 @@ function VideoGenerator() {
       )}
 
       {/* Video Section */}
-      {showContent && (
+      {currentLesson.hasContent && (
         <div className="video-section">
-          <h2 className="section-title">Your Animation</h2>
+          <div className="section-header">
+            <h2 className="section-title">Your Animation</h2>
+            <button
+              onClick={handleNewLesson}
+              className="new-lesson-btn celestial-btn"
+              title="Start a new lesson"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              New Lesson
+            </button>
+          </div>
 
           {/* Share to Community Button */}
-          {videoId && (
+          {currentLesson.videoId && (
             <div className="share-section">
-              {!sharedToCommunity ? (
+              {!currentLesson.sharedToCommunity ? (
                 <button
                   onClick={handleShareToCommunity}
                   disabled={sharingLoading}
@@ -327,40 +305,23 @@ function VideoGenerator() {
             <video
               ref={videoRef}
               controls
-              key={videoUrl}
+              key={currentLesson.videoUrl}
               className="video-player"
             >
-              <source src={videoUrl} type="video/mp4" />
+              <source src={currentLesson.videoUrl} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
-            {/* Hidden audio element that syncs with video - only if audio exists */}
-            {audioUrl && (
-              <audio
-                ref={audioRef}
-                style={{ display: 'none' }}
-                key={audioUrl}
-              >
-                <source src={audioUrl} type="audio/mpeg" />
-              </audio>
-            )}
           </div>
 
           {/* Narration Script Display */}
-          {narrationScript && (
+          {currentLesson.narrationScript && (
             <div className="audio-section">
               <h3 className="section-subtitle">AI Narration Script</h3>
               <div className="narration-script">
-                <p className="script-text">{narrationScript}</p>
+                <p className="script-text">{currentLesson.narrationScript}</p>
               </div>
             </div>
           )}
-
-          {/* {manimCode && (
-            <details className="code-section">
-              <summary className="code-summary">View Generated Code</summary>
-              <pre className="code-block">{manimCode}</pre>
-            </details>
-          )} */}
         </div>
       )}
     </div>

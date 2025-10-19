@@ -8,46 +8,10 @@ function Community() {
   const [error, setError] = useState('');
   const [expandedCode, setExpandedCode] = useState({});
   const videoRefs = useRef({});
-  const audioRefs = useRef({});
 
   useEffect(() => {
     fetchVideos();
   }, []);
-
-  // Sync audio with video for a specific video ID
-  useEffect(() => {
-    videos.forEach((video) => {
-      if (!video.audio_url) return;
-
-      const videoElement = videoRefs.current[video.id];
-      const audioElement = audioRefs.current[video.id];
-
-      if (!videoElement || !audioElement) return;
-
-      const handlePlay = () => {
-        audioElement.currentTime = videoElement.currentTime;
-        audioElement.play().catch(err => console.log('Audio play error:', err));
-      };
-
-      const handlePause = () => {
-        audioElement.pause();
-      };
-
-      const handleSeeking = () => {
-        audioElement.currentTime = videoElement.currentTime;
-      };
-
-      videoElement.addEventListener('play', handlePlay);
-      videoElement.addEventListener('pause', handlePause);
-      videoElement.addEventListener('seeking', handleSeeking);
-
-      return () => {
-        videoElement.removeEventListener('play', handlePlay);
-        videoElement.removeEventListener('pause', handlePause);
-        videoElement.removeEventListener('seeking', handleSeeking);
-      };
-    });
-  }, [videos]);
 
   const fetchVideos = async () => {
     try {
@@ -124,18 +88,10 @@ function Community() {
                 ref={(el) => (videoRefs.current[video.id] = el)}
                 controls
                 className="video-player"
-                src={`${API_BASE_URL}${video.video_url}`}
+                src={`${API_BASE_URL}${video.final_video_url}`}
               >
                 Your browser does not support the video tag.
               </video>
-              {video.audio_url && (
-                <audio
-                  ref={(el) => (audioRefs.current[video.id] = el)}
-                  id={`audio-${video.id}`}
-                  src={`${API_BASE_URL}${video.audio_url}`}
-                  style={{ display: 'none' }}
-                />
-              )}
             </div>
 
             <div className="video-info">

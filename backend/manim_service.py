@@ -13,12 +13,14 @@ class ManimService:
         self.base_dir = Path(os.path.dirname(os.path.abspath(__file__)))
         self.video_dir = self.base_dir / settings.OUTPUT_DIR
         self.code_dir = self.base_dir / settings.CODE_DIR
+        self.final_videos_dir = self.base_dir / settings.FINAL_VIDEOS_DIR
         self._ensure_directories()
     
     def _ensure_directories(self):
         """Create output directories if they don't exist."""
         self.video_dir.mkdir(exist_ok=True)
         self.code_dir.mkdir(exist_ok=True)
+        self.final_videos_dir.mkdir(exist_ok=True)
     
     def _generate_filename(self) -> str:
         """Generate a timestamp-based filename."""
@@ -102,13 +104,87 @@ class ManimService:
             print(f"Manim service error: {str(e)}")
             return None, str(script_path) if 'script_path' in locals() else None
     
-    def get_video_path(self, filename: str) -> Path:
-        """Get the full path to a video file."""
-        return self.video_dir / filename
+    def combine_video_audio(self, video_path: str, audio_path: str, output_filename: str = None) -> str:
+        """
+        Combine video and audio files using ffmpeg.
+        
+        Args:
+            video_path: Path to the video file (without audio)
+            audio_path: Path to the audio file
+            output_filename: Optional custom filename for output (default: uses video filename)
+        
+        Returns:
+            Path to the combined video file in final_videos directory
+        """
+        try:
+            video_path = Path(video_path)
+            audio_path = Path(audio_path)
+            
+            if not video_path.exists():
+                raise FileNotFoundError(f"Video file not found: {video_path}")
+            if not audio_path.exists():
+                raise FileNotFoundError(f"Audio file not found: {audio_path}")
+            
+            # Use the video filename or custom filename
+            if output_filename is None:
+                output_filename = video_path.name
+            
+            final_video_path = self.final_videos_dir / output_filename
+            
+            # Use ffmpeg to combine video and audio
+            # -i: input files
+            # -c:v copy: copy video codec (no re-encoding)
+            # -c:a aac: encode audio to aac
+            # -shortest: finish encoding when the shortest input stream ends
+            cmd = [
+                "ffmpeg",
+                "-y",  # Overwrite output file if it exists
+                "-i", str(video_path),
+                "-i", str(audio_path),
+                "-c:v", "copy",  # Copy video stream without re-encoding
+                "-c:a", "aac",   # Encode audio to AAC
+                "-shortest",     # End when shortest stream ends
+                str(final_video_path)
+            ]
+            
+            print(f"[ManimService] Combining video and audio...")
+            print(f"[ManimService] Video: {video_path.name}")
+            print(f"[ManimService] Audio: {audio_path.name}")
+            print(f"[ManimService] Output: {final_video_path.name}")
+            
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            
+            if result.returncode != 0:
+                print(f"[ManimService] FFmpeg failed with return code {result.returncode}")
+                print(f"[ManimService] STDOUT: {result.stdout}")
+                print(f"[ManimService] STDERR: {result.stderr}")
+                return None
+            
+            print(f"[ManimService] Successfully combined video and audio: {final_video_path.name}")
+            
+            # Delete the original video file from manim_videos after successful combination
+            try:
+                if video_path.exists():
+                    video_path.unlink()
+                    print(f"[ManimService] Deleted original video: {video_path.name}")
+            except Exception as delete_error:
+                print(f"[ManimService] Warning: Could not delete original video: {delete_error}")
+            
+            return str(final_video_path)
+            
+        except Exception as e:
+            print(f"[ManimService] Error combining video and audio: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return None
     
     def get_script_path(self, filename: str) -> Path:
         """Get the full path to a script file."""
         return self.code_dir / filename
+    
+    def get_final_video_path(self, filename: str) -> Path:
+        """Get the full path to a final combined video file."""
+        return self.final_videos_dir / filename
 
 
 manim_service = ManimService()

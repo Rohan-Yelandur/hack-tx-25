@@ -8,7 +8,7 @@ function Header() {
     <header className="header">
       <div className="header-content">
         <Link to="/" className="header-title">
-          <h1>Manim Video Generator</h1>
+          <h1>Canopus</h1>
         </Link>
         <nav className="header-nav">
           <Link
