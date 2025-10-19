@@ -5,6 +5,64 @@ from datetime import datetime
 from settings import settings
 import os
 import base64
+import re
+
+
+def convert_char_timing_to_word_timing(script: str, char_timing: dict) -> list:
+    """
+    Convert character-level timing data to word-level timing data.
+    
+    Args:
+        script: The original script text
+        char_timing: Dictionary with 'characters', 'character_start_times', 'character_end_times'
+    
+    Returns:
+        List of dictionaries with 'word', 'start_time', 'end_time' for each word
+    """
+    characters = char_timing['characters']
+    start_times = char_timing['character_start_times']
+    end_times = char_timing['character_end_times']
+    
+    # Build words by grouping characters
+    word_timings = []
+    current_word = ""
+    word_start_time = None
+    word_end_time = None
+    char_index = 0
+    
+    for i, char in enumerate(characters):
+        # Skip if we've exhausted the timing data
+        if i >= len(start_times):
+            break
+            
+        # Non-space character - part of a word
+        if char.strip():
+            if current_word == "":
+                # Starting a new word
+                word_start_time = start_times[i]
+            current_word += char
+            word_end_time = end_times[i]
+        else:
+            # Space or whitespace - end of word
+            if current_word:
+                word_timings.append({
+                    'word': current_word,
+                    'start_time': word_start_time,
+                    'end_time': word_end_time
+                })
+                current_word = ""
+                word_start_time = None
+                word_end_time = None
+    
+    # Don't forget the last word if there is one
+    if current_word:
+        word_timings.append({
+            'word': current_word,
+            'start_time': word_start_time,
+            'end_time': word_end_time
+        })
+    
+    return word_timings
 
 
 class ElevenLabsService:
@@ -109,14 +167,33 @@ class ElevenLabsService:
             print(f"[ElevenLabsService] Audio saved to {audio_path}")
 
             # Extract timing data (response.alignment is an object)
-            timing_data = {
+            char_timing_data = {
                 'characters': response.alignment.characters,
                 'character_start_times': response.alignment.character_start_times_seconds,
                 'character_end_times': response.alignment.character_end_times_seconds
             }
             
-            total_duration = timing_data['character_end_times'][-1] if timing_data['character_end_times'] else 0
+            # Convert character-level timing to word-level timing
+            word_timings = convert_char_timing_to_word_timing(script, char_timing_data)
+            
+            # Create comprehensive timing data with both formats
+            timing_data = {
+                'word_timings': word_timings,
+                'character_timings': char_timing_data  # Keep for reference if needed
+            }
+            
+            total_duration = char_timing_data['character_end_times'][-1] if char_timing_data['character_end_times'] else 0
             print(f"[ElevenLabsService] Audio duration: {total_duration:.2f} seconds")
+            print(f"[ElevenLabsService] Generated word-level timing for {len(word_timings)} words")
+            
+            # Print formatted word timings for debugging
+            print("\n[ElevenLabsService] Word-level timing breakdown:")
+            print("-" * 70)
+            for i, wt in enumerate(word_timings[:10]):  # Show first 10 words
+                print(f"  {wt['start_time']:6.2f}s - {wt['end_time']:6.2f}s : \"{wt['word']}\"")
+            if len(word_timings) > 10:
+                print(f"  ... and {len(word_timings) - 10} more words")
+            print("-" * 70 + "\n")
             
             return str(audio_path), str(script_path), timing_data
             

@@ -175,12 +175,16 @@ def register_routes(app):
             
             print(f"[API-Narration] Narration generation complete\n")
             
+            # Extract duration from timing data
+            char_timings = timing_data.get('character_timings', {})
+            audio_duration = char_timings.get('character_end_times', [0])[-1] if char_timings.get('character_end_times') else 0
+            
             return jsonify({
                 'success': True,
                 'script_url': f'/api/elevenlabs-script/{script_filename}',
                 'audio_url': f'/api/elevenlabs-audio/{audio_filename}',
                 'script_text': narration_script,
-                'audio_duration': timing_data['character_end_times'][-1] if timing_data['character_end_times'] else 0
+                'audio_duration': audio_duration
             })
                 
         except Exception as e:

@@ -2,6 +2,7 @@ from google import genai
 from google.genai import types
 from settings import settings
 from prompts import generate_manim_prompt, generate_manim_from_script_prompt
+import time
 
 class GeminiService:
     """Service for interacting with Google Gemini AI."""
@@ -18,9 +19,6 @@ class GeminiService:
             response = self.client.models.generate_content(
                 model=settings.GEMINI_MODEL, 
                 contents=full_prompt,
-                config=types.GenerateContentConfig(
-                    tools=[types.Tool(code_execution=types.ToolCodeExecution)]
-                ),
             )
             
             # Extract the generated code from the response
@@ -36,23 +34,30 @@ class GeminiService:
         try:
             print(f"[GeminiService] Generating Manim code from script...")
             print(f"[GeminiService] Script: {script[:100]}...")
-            total_duration = timing_data['character_end_times'][-1] if timing_data['character_end_times'] else 0
+            
+            # Extract total duration from timing data
+            char_timings = timing_data.get('character_timings', {})
+            total_duration = char_timings.get('character_end_times', [10])[-1] if char_timings.get('character_end_times') else 10
+            word_timings = timing_data.get('word_timings', [])
+            
             print(f"[GeminiService] Target duration: {total_duration:.2f} seconds")
+            print(f"[GeminiService] Word timings: {len(word_timings)} words")
+            
             
             full_prompt = generate_manim_from_script_prompt(user_prompt, script, timing_data)
             
             print(f"[GeminiService] Calling Gemini API for code generation...")
+            start_time = time.time()
+            
             # Enable code execution tool for better code generation
             response = self.client.models.generate_content(
                 model=settings.GEMINI_MODEL, 
                 contents=full_prompt,
-                config=types.GenerateContentConfig(
-                    tools=[types.Tool(code_execution=types.ToolCodeExecution)]
-                ),
             )
             
-            print(f"[GeminiService] Received response from Gemini API")
-            
+            end_time = time.time()
+            duration = end_time - start_time
+            print(f"[GeminiService] Received response from Gemini API (took {duration:.2f} seconds)")
             # Extract the generated code from the response
             generated_code = response.text.strip().replace("```python", "").replace("```", "").strip()
             
