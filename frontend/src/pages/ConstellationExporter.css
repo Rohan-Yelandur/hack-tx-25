@@ -1,0 +1,93 @@
+.constellation-exporter {
+  padding: 2rem;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1f35 0%, #2d1b4e 100%);
+}
+
+.exporter-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  color: #e8e9ed;
+}
+
+.exporter-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #8b7fd8 0%, #b4a5e8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.exporter-header p {
+  font-size: 1.1rem;
+  opacity: 0.8;
+}
+
+.constellation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.constellation-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(139, 127, 216, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+}
+
+.constellation-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(139, 127, 216, 0.6);
+  box-shadow: 0 8px 24px rgba(139, 127, 216, 0.2);
+}
+
+.constellation-card h3 {
+  color: #e8e9ed;
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.constellation-card svg {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid rgba(139, 127, 216, 0.2);
+}
+
+.download-buttons {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.download-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #8b7fd8 0%, #6a5fb7 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 127, 216, 0.4);
+  background: linear-gradient(135deg, #9a8ee0 0%, #7a6fc5 100%);
+}
+
+.download-btn:active {
+  transform: translateY(0);
+}
+

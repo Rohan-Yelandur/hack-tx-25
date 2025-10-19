@@ -8,6 +8,7 @@ function Header() {
     <header className="header">
       <div className="header-content">
         <Link to="/" className="header-title">
+          <img src="/constellation-scorpius.svg" alt="Canopus Logo" className="header-logo" />
           <h1>Canopus</h1>
         </Link>
         <nav className="header-nav">
