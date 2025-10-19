@@ -1,0 +1,80 @@
+{
+  "quiz_id": "20251019_095416",
+  "video_id": null,
+  "prompt": "explain subtraction",
+  "questions": [
+    {
+      "id": 1,
+      "type": "step-by-step",
+      "question_text": "A bakery has 37 cupcakes. They sell 19 cupcakes. How many cupcakes are left?",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "Write the subtraction equation you need to solve.",
+          "correct_answer": "37 - 19 = ?",
+          "hint": "Start with the initial amount, and subtract what was removed.",
+          "explanation": "We started with 37 cupcakes and are taking away 19."
+        },
+        {
+          "stage_number": 2,
+          "prompt": "What is 37 - 19?",
+          "correct_answer": "18",
+          "hint": "You might need to borrow from the tens column.",
+          "explanation": "37 - 19 = 18. There are 18 cupcakes left."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "multiple-choice",
+      "question_text": "What is another word for subtraction?",
+      "options": [
+        "Sum",
+        "Product",
+        "Difference",
+        "Quotient"
+      ],
+      "correct_answer": "Difference",
+      "explanation": "The result of a subtraction problem is called the difference."
+    },
+    {
+      "id": 3,
+      "type": "multiple-choice",
+      "question_text": "In the equation 15 - 7 = 8, which number is the minuend?",
+      "options": [
+        "15",
+        "7",
+        "8",
+        "0"
+      ],
+      "correct_answer": "15",
+      "explanation": "The minuend is the number from which you are subtracting (the first number)."
+    },
+    {
+      "id": 4,
+      "type": "fill-in-blank",
+      "question_text": "Subtraction is the _____ operation of addition.",
+      "correct_answers": [
+        "inverse",
+        "opposite",
+        "reverse"
+      ],
+      "case_sensitive": false,
+      "explanation": "Subtraction 'undoes' addition. For example, if 5 + 3 = 8, then 8 - 3 = 5."
+    },
+    {
+      "id": 5,
+      "type": "multiple-choice",
+      "question_text": "Which of the following is an example of the identity property of subtraction?",
+      "options": [
+        "5 - 0 = 5",
+        "5 - 5 = 0",
+        "5 + 0 = 5",
+        "5 - 1 = 4"
+      ],
+      "correct_answer": "5 - 0 = 5",
+      "explanation": "The identity property states that any number minus zero equals itself."
+    }
+  ],
+  "created_at": "20251019_095416"
+}

@@ -19,13 +19,19 @@ export const LessonProvider = ({ children }) => {
     sharedToCommunity: false,
     hasContent: false,
     loading: false,
+    // Quiz data
+    quizData: null,
+    quizId: null,
+    // Loading states
+    videoLoading: false,
+    quizLoading: false,
   });
 
   const updateLesson = (lessonData) => {
     setCurrentLesson(prev => ({
       ...prev,
       ...lessonData,
-      hasContent: true,
+      hasContent: !!(lessonData.videoUrl || prev.videoUrl),
     }));
   };
 
@@ -38,6 +44,10 @@ export const LessonProvider = ({ children }) => {
       sharedToCommunity: false,
       hasContent: false,
       loading: false,
+      quizData: null,
+      quizId: null,
+      videoLoading: false,
+      quizLoading: false,
     });
   };
 
@@ -48,8 +58,29 @@ export const LessonProvider = ({ children }) => {
     }));
   };
 
+  const setVideoLoading = (isLoading) => {
+    setCurrentLesson(prev => ({
+      ...prev,
+      videoLoading: isLoading,
+    }));
+  };
+
+  const setQuizLoading = (isLoading) => {
+    setCurrentLesson(prev => ({
+      ...prev,
+      quizLoading: isLoading,
+    }));
+  };
+
   return (
-    <LessonContext.Provider value={{ currentLesson, updateLesson, clearLesson, setLoading }}>
+    <LessonContext.Provider value={{
+      currentLesson,
+      updateLesson,
+      clearLesson,
+      setLoading,
+      setVideoLoading,
+      setQuizLoading,
+    }}>
       {children}
     </LessonContext.Provider>
   );

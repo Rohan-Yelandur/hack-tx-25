@@ -1,0 +1,83 @@
+{
+  "quiz_id": "20251019_100655",
+  "video_id": null,
+  "prompt": "explain eigenvalues and eigenvectors",
+  "questions": [
+    {
+      "id": 1,
+      "type": "multiple-choice",
+      "question_text": "An eigenvector, when multiplied by a matrix, results in:",
+      "options": [
+        "The zero vector.",
+        "A scalar multiple of the eigenvector.",
+        "A vector orthogonal to the eigenvector.",
+        "A vector with the same magnitude as the original vector."
+      ],
+      "correct_answer": "A scalar multiple of the eigenvector.",
+      "explanation": "By definition, multiplying a matrix by its eigenvector results in a scalar (eigenvalue) multiplied by the original eigenvector."
+    },
+    {
+      "id": 2,
+      "type": "step-by-step",
+      "question_text": "Find an eigenvector for the matrix A = [[2, 1], [1, 2]] corresponding to the eigenvalue \u03bb = 3.",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "Form the matrix (A - \u03bbI), where I is the identity matrix. What is the resulting matrix?",
+          "correct_answer": "[[-1, 1], [1, -1]]",
+          "hint": "Remember to subtract \u03bb from the diagonal elements of A.",
+          "explanation": "A - \u03bbI = [[2, 1], [1, 2]] - 3 * [[1, 0], [0, 1]] = [[2-3, 1], [1, 2-3]] = [[-1, 1], [1, -1]]."
+        },
+        {
+          "stage_number": 2,
+          "prompt": "Solve the system of linear equations (A - \u03bbI)v = 0, where v is the eigenvector [x, y].  What is the relationship between x and y?",
+          "correct_answer": "x = y",
+          "hint": "The rows of (A - \u03bbI) should be linearly dependent. Focus on one equation.",
+          "explanation": "From the matrix equation, we have -x + y = 0 and x - y = 0. Both equations simplify to x = y."
+        },
+        {
+          "stage_number": 3,
+          "prompt": "Choose a non-zero value for x (or y, since x=y).  What is a possible eigenvector v?",
+          "correct_answer": "[1, 1]",
+          "hint": "Any non-zero scalar multiple of a valid eigenvector is also a valid eigenvector.",
+          "explanation": "Since x = y, any vector of the form [c, c] where c is a non-zero constant is an eigenvector. [1, 1] is the simplest choice."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "fill-in-blank",
+      "question_text": "The set of all eigenvectors corresponding to a single eigenvalue, along with the zero vector, forms a vector _____",
+      "correct_answers": [
+        "space"
+      ],
+      "case_sensitive": false,
+      "explanation": "This vector space is known as the eigenspace corresponding to that eigenvalue."
+    },
+    {
+      "id": 4,
+      "type": "multiple-choice",
+      "question_text": "Eigenvalues are used in many applications. Which of the following is NOT a typical application?",
+      "options": [
+        "Principal Component Analysis (PCA)",
+        "Solving systems of differential equations",
+        "Analyzing the stability of systems",
+        "Calculating the area of a triangle"
+      ],
+      "correct_answer": "Calculating the area of a triangle",
+      "explanation": "While area calculation is a geometric problem, it is generally not solved using eigenvalues. Eigenvalues are central to PCA, solving differential equations, and stability analysis."
+    },
+    {
+      "id": 5,
+      "type": "fill-in-blank",
+      "question_text": "The characteristic equation of a matrix A is given by det(A - \u03bbI) = 0, where \u03bb represents the _______ of the matrix.",
+      "correct_answers": [
+        "eigenvalues",
+        "characteristic values"
+      ],
+      "case_sensitive": false,
+      "explanation": "The solutions to the characteristic equation are the eigenvalues of the matrix A."
+    }
+  ],
+  "created_at": "20251019_100655"
+}

@@ -1,0 +1,78 @@
+{
+  "quiz_id": "20251019_100217",
+  "video_id": null,
+  "prompt": "explain taylor series",
+  "questions": [
+    {
+      "id": 1,
+      "type": "multiple-choice",
+      "question_text": "A Taylor series is a representation of a function as an infinite sum of terms calculated from the function's ________ at a single point.",
+      "options": [
+        "Integrals",
+        "Derivatives",
+        "Roots",
+        "Limits"
+      ],
+      "correct_answer": "Derivatives",
+      "explanation": "The Taylor series uses derivatives of a function at a single point to construct an infinite sum that approximates the function around that point."
+    },
+    {
+      "id": 2,
+      "type": "step-by-step",
+      "question_text": "Consider the function f(x) = sin(x).  We want to find its Taylor series expansion around a = 0 (Maclaurin series).",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "Find the first derivative, f'(x).",
+          "correct_answer": "cos(x)",
+          "hint": "Recall the derivative of sin(x).",
+          "explanation": "The derivative of sin(x) is cos(x)."
+        },
+        {
+          "stage_number": 2,
+          "prompt": "Evaluate f(0) and f'(0).",
+          "correct_answer": "f(0) = 0, f'(0) = 1",
+          "hint": "Substitute x = 0 into sin(x) and cos(x).",
+          "explanation": "sin(0) = 0 and cos(0) = 1."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "fill-in-blank",
+      "question_text": "The general form of a Taylor series centered at a point 'a' involves terms with increasing powers of (x - ____).",
+      "correct_answers": [
+        "a"
+      ],
+      "case_sensitive": false,
+      "explanation": "The Taylor series expands a function around the point 'a', so each term involves (x - a) raised to some power."
+    },
+    {
+      "id": 4,
+      "type": "multiple-choice",
+      "question_text": "What is the primary purpose of using a Taylor series?",
+      "options": [
+        "To find the roots of a function.",
+        "To approximate the value of a function at a specific point.",
+        "To simplify the function.",
+        "To find the area under the curve of the function."
+      ],
+      "correct_answer": "To approximate the value of a function at a specific point.",
+      "explanation": "Taylor series provides a polynomial approximation of a function, which is particularly useful for evaluating functions or solving differential equations where direct calculation is difficult."
+    },
+    {
+      "id": 5,
+      "type": "multiple-choice",
+      "question_text": "What is the Maclaurin series?",
+      "options": [
+        "A Taylor series centered at x=1.",
+        "A Taylor series centered at x=0.",
+        "A Taylor series that only contains even powers of x.",
+        "A Taylor series that only contains odd powers of x."
+      ],
+      "correct_answer": "A Taylor series centered at x=0.",
+      "explanation": "A Maclaurin series is a special case of the Taylor series where the series is centered around the point x=0."
+    }
+  ],
+  "created_at": "20251019_100217"
+}
