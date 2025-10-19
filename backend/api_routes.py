@@ -544,6 +544,97 @@ def register_routes(app):
 
 
     # ==================== Resource Endpoints ====================
+<<<<<<< HEAD
+=======
+
+    @app.route('/api/manim-video/<filename>', methods=['GET'])
+    def get_manim_video(filename):
+        """Serve Manim video files."""
+        video_path = manim_service.get_video_path(filename)
+        if video_path.exists():
+            return send_file(video_path, mimetype='video/mp4')
+        return jsonify({'error': 'Video not found'}), 404
+
+
+    @app.route('/api/download-video/<video_id>', methods=['GET'])
+    def download_video_with_audio(video_id):
+        """Download video merged with audio."""
+        from settings import settings
+        import subprocess
+        import tempfile
+
+        try:
+            # Get video path
+            video_path = Path(settings.OUTPUT_DIR) / f'{video_id}.mp4'
+            if not video_path.exists():
+                return jsonify({'error': 'Video not found'}), 404
+
+            # Get audio path
+            audio_path = Path(settings.AUDIO_DIR) / f'audio_{video_id}.mp3'
+
+            # If no audio, just serve the video
+            if not audio_path.exists():
+                print(f"[API-Download] No audio found for {video_id}, serving video only")
+                return send_file(video_path, mimetype='video/mp4', as_attachment=True, download_name=f'animation_{video_id}.mp4')
+
+            # Create temporary file for merged output
+            merged_output = Path(settings.OUTPUT_DIR) / f'{video_id}_merged.mp4'
+
+            # Check if merged file already exists
+            if merged_output.exists():
+                print(f"[API-Download] Using cached merged video: {merged_output}")
+                return send_file(merged_output, mimetype='video/mp4', as_attachment=True, download_name=f'animation_{video_id}.mp4')
+
+            print(f"[API-Download] Merging video and audio for {video_id}...")
+
+            # Use ffmpeg to merge video and audio
+            # -i: input file
+            # -map 0:v: take video from first input
+            # -map 1:a: take audio from second input
+            # -c:v copy: don't re-encode video (faster)
+            # -c:a aac: encode audio as AAC (compatible)
+            # -shortest: end when shortest stream ends
+            ffmpeg_cmd = [
+                'ffmpeg',
+                '-i', str(video_path),
+                '-i', str(audio_path),
+                '-map', '0:v',
+                '-map', '1:a',
+                '-c:v', 'copy',
+                '-c:a', 'aac',
+                '-shortest',
+                '-y',  # Overwrite output file if exists
+                str(merged_output)
+            ]
+
+            result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True)
+
+            if result.returncode != 0:
+                print(f"[API-Download ERROR] ffmpeg failed: {result.stderr}")
+                # Fallback to video only
+                return send_file(video_path, mimetype='video/mp4', as_attachment=True, download_name=f'animation_{video_id}.mp4')
+
+            print(f"[API-Download] Successfully merged video and audio")
+
+            # Serve the merged file
+            return send_file(merged_output, mimetype='video/mp4', as_attachment=True, download_name=f'animation_{video_id}.mp4')
+
+        except Exception as e:
+            error_msg = f"{type(e).__name__}: {str(e)}"
+            print(f"[API-Download ERROR] {error_msg}")
+            import traceback
+            traceback.print_exc()
+
+            # Fallback to video only on error
+            if video_path.exists():
+                return send_file(video_path, mimetype='video/mp4', as_attachment=True, download_name=f'animation_{video_id}.mp4')
+
+            return jsonify({
+                'error': error_msg,
+                'error_type': type(e).__name__
+            }), 500
+    
+>>>>>>> 6f9dfdd1a84070bc3cc09979e2e08e4c53104301
     
     @app.route('/api/manim-code/<filename>', methods=['GET'])
     def get_manim_code(filename):

@@ -101,15 +101,25 @@ function VideoGenerator() {
     }
 
     try {
+<<<<<<< HEAD
       // Fetch the video as a blob to force download instead of navigation
       const response = await fetch(currentLesson.videoUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
+=======
+      // Use the new download endpoint that merges video and audio
+      const downloadUrl = `${API_BASE_URL}/api/download-video/${currentLesson.videoId}`;
+>>>>>>> 6f9dfdd1a84070bc3cc09979e2e08e4c53104301
 
       const a = document.createElement('a');
+<<<<<<< HEAD
       a.style.display = 'none';
       a.href = url;
       a.download = `animation_${currentLesson.videoId}.mp4`;
+=======
+      a.href = downloadUrl;
+  a.download = `animation_${currentLesson.videoId}.mp4`;
+>>>>>>> 6f9dfdd1a84070bc3cc09979e2e08e4c53104301
       document.body.appendChild(a);
       a.click();
 
@@ -170,16 +180,6 @@ function VideoGenerator() {
     }
   };
 
-  const handleNewLesson = () => {
-    clearLesson();
-    setPrompt('');
-    setError('');
-    setPdfFile(null);
-    setPdfPreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -187,10 +187,18 @@ function VideoGenerator() {
       return;
     }
 
+<<<<<<< HEAD
     setContextLoading(true);
     setError('');
     setTags([]);
     setTagInput('');
+=======
+  setContextLoading(true);
+  setError('');
+  // clear tags input locally
+  setTags([]);
+  setTagInput('');
+>>>>>>> 6f9dfdd1a84070bc3cc09979e2e08e4c53104301
 
     try {
       const formData = new FormData();
@@ -364,6 +372,7 @@ function VideoGenerator() {
       {/* Video Section */}
       {currentLesson.hasContent && (
         <div className="video-section">
+<<<<<<< HEAD
           <div className="section-header">
             <h2 className="section-title">Your Animation</h2>
             <div className="header-buttons">
@@ -417,6 +426,83 @@ function VideoGenerator() {
                 </svg>
               </button>
             </div>
+=======
+          <h2 className="section-title">Your Animation</h2>
+
+          {/* Action Buttons */}
+          <div className="action-buttons">
+            {/* Download Button */}
+            <button
+              onClick={handleDownload}
+              className="download-btn"
+              title="Download video"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Download
+            </button>
+
+            {/* Share to Community Button */}
+            {currentLesson.videoId && (
+              <div className="share-section">
+                {!currentLesson.sharedToCommunity ? (
+                  <div className="share-container">
+                    {/* Tag Input */}
+                    <div className="tag-input-section">
+                      <label className="tag-label">Add tags (optional, max 5):</label>
+                      <div className="tag-input-wrapper">
+                        <input
+                          type="text"
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          onKeyDown={handleAddTag}
+                          placeholder="e.g., math, physics, tutorial"
+                          className="tag-input"
+                          maxLength={20}
+                          disabled={tags.length >= 5}
+                        />
+                        {tags.length < 5 && (
+                          <small className="tag-hint">Press Enter to add tag</small>
+                        )}
+                      </div>
+                      {/* Tag Display */}
+                      {tags.length > 0 && (
+                        <div className="tags-display">
+                          {tags.map((tag, index) => (
+                            <span key={index} className="tag-pill">
+                              {tag}
+                              <button
+                                onClick={() => handleRemoveTag(tag)}
+                                className="tag-remove"
+                                aria-label="Remove tag"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={handleShareToCommunity}
+                      disabled={sharingLoading}
+                      className="share-btn"
+                    >
+                      {sharingLoading ? 'Sharing...' : '✨ Share to Community'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="shared-message">
+                    ✓ Shared to Community Gallery!
+                  </div>
+                )}
+              </div>
+            )}
+>>>>>>> 6f9dfdd1a84070bc3cc09979e2e08e4c53104301
           </div>
 
           <div className="video-container">
