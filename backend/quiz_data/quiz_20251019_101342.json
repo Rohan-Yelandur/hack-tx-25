@@ -1,0 +1,91 @@
+{
+  "quiz_id": "20251019_101342",
+  "video_id": null,
+  "prompt": "Explain and visualize how a Taylor series approximates functions",
+  "questions": [
+    {
+      "id": 1,
+      "type": "multiple-choice",
+      "question_text": "A Taylor series approximates a function around a specific point, often denoted as 'a'. What does the Taylor series use to achieve this approximation?",
+      "options": [
+        "The function's values at infinitely many random points.",
+        "The function's derivatives evaluated at 'a'.",
+        "The function's integral from negative infinity to positive infinity.",
+        "The function's limit as x approaches infinity."
+      ],
+      "correct_answer": "The function's derivatives evaluated at 'a'.",
+      "explanation": "The Taylor series uses the function's derivatives at the point 'a' to construct a polynomial that approximates the function near that point. Each term in the series is a derivative evaluated at 'a' multiplied by a power of (x-a)."
+    },
+    {
+      "id": 2,
+      "type": "step-by-step",
+      "question_text": "Consider the Taylor series approximation of f(x) = e^x around a = 0. Let's find the first few terms:",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "What is the 0th derivative of f(x) = e^x evaluated at x = 0 (i.e., f(0))?",
+          "correct_answer": "1",
+          "hint": "The 0th derivative is just the function itself. Remember that e^0 = 1.",
+          "explanation": "f(x) = e^x, so f(0) = e^0 = 1."
+        },
+        {
+          "stage_number": 2,
+          "prompt": "What is the 1st derivative of f(x) = e^x evaluated at x = 0 (i.e., f'(0))?",
+          "correct_answer": "1",
+          "hint": "The derivative of e^x is e^x itself.",
+          "explanation": "f'(x) = e^x, so f'(0) = e^0 = 1."
+        },
+        {
+          "stage_number": 3,
+          "prompt": "What is the 2nd derivative of f(x) = e^x evaluated at x = 0 (i.e., f''(0))?",
+          "correct_answer": "1",
+          "hint": "The derivative of e^x is still e^x.",
+          "explanation": "f''(x) = e^x, so f''(0) = e^0 = 1."
+        },
+        {
+          "stage_number": 4,
+          "prompt": "Using the values f(0) = 1, f'(0) = 1, and f''(0) = 1, write out the Taylor polynomial of degree 2 for e^x around a=0. The general formula for the nth term is (f^(n)(a) / n!)*(x-a)^n. The first three terms will be: f(a) + f'(a)(x-a) + (f''(a)/2!)(x-a)^2.",
+          "correct_answer": "1 + x + x^2/2",
+          "hint": "Substitute the values you found into the Taylor series formula, remembering a=0.",
+          "explanation": "The Taylor polynomial is 1 + 1*(x-0) + (1/2)*(x-0)^2 = 1 + x + x^2/2."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "fill-in-blank",
+      "question_text": "The more terms included in a Taylor series, the _____ the approximation generally becomes within its radius of convergence.",
+      "correct_answers": [
+        "better",
+        "more accurate",
+        "closer"
+      ],
+      "case_sensitive": false,
+      "explanation": "Adding more terms incorporates higher-order derivative information, allowing the polynomial to match the original function more closely near the point 'a'."
+    },
+    {
+      "id": 4,
+      "type": "multiple-choice",
+      "question_text": "Visually, how does adding more terms to a Taylor series approximation affect the graph?",
+      "options": [
+        "The approximation's graph shrinks towards the point 'a'.",
+        "The approximation's graph becomes flatter everywhere.",
+        "The approximation's graph more closely resembles the original function's graph within a certain interval around 'a'.",
+        "The approximation's graph oscillates wildly."
+      ],
+      "correct_answer": "The approximation's graph more closely resembles the original function's graph within a certain interval around 'a'.",
+      "explanation": "Each additional term refines the approximation, making it a better fit for the original function's shape in the vicinity of the expansion point."
+    },
+    {
+      "id": 5,
+      "type": "fill-in-blank",
+      "question_text": "The 'radius of _____ ' determines the interval around the point 'a' where the Taylor series approximation is valid and converges to the function's actual value.",
+      "correct_answers": [
+        "convergence"
+      ],
+      "case_sensitive": false,
+      "explanation": "The radius of convergence is a critical property of a Taylor series. Outside this radius, the series may diverge and not accurately represent the function."
+    }
+  ],
+  "created_at": "20251019_101342"
+}

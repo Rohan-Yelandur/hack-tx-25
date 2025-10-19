@@ -17,7 +17,7 @@ function SplashScreen() {
         transition={{ duration: 0.6, ease: 'easeOut' }}
       >
         <h1 className="splash-title">Canopus</h1>
-        <p className="splash-subtitle">We Help You Connect the Dots</p>
+        <p className="splash-subtitle">We Connect the Dots</p>
       </motion.div>
     </motion.div>
   );

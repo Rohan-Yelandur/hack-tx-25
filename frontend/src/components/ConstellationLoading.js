@@ -94,7 +94,7 @@ export default function ConstellationLoading() {
           ) : null
         ))}
       </svg>
-      <div className="constellation-loading-text">Generating your animation...</div>
+      <div className="constellation-loading-text">Generating your video explanation...</div>
     </div>
   );
 }

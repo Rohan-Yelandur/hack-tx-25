@@ -1,0 +1,80 @@
+{
+  "quiz_id": "20251019_095835",
+  "video_id": null,
+  "prompt": "Explain subtraction",
+  "questions": [
+    {
+      "id": 1,
+      "type": "step-by-step",
+      "question_text": "You have 23 apples and give 8 to a friend.  How many apples do you have left? Solve this subtraction problem step-by-step.",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "Write out the subtraction problem using the numbers given.",
+          "correct_answer": "23 - 8",
+          "hint": "Remember to start with the total you have and subtract what you are giving away.",
+          "explanation": "We start with 23 apples, and we need to subtract the 8 that we gave away."
+        },
+        {
+          "stage_number": 2,
+          "prompt": "Perform the subtraction. What is the result?",
+          "correct_answer": "15",
+          "hint": "Start by subtracting the ones place. If needed, borrow from the tens place.",
+          "explanation": "23 - 8 = 15. You have 15 apples left."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "multiple-choice",
+      "question_text": "Which of the following words is NOT a synonym for subtraction?",
+      "options": [
+        "Difference",
+        "Minus",
+        "Decrease",
+        "Total"
+      ],
+      "correct_answer": "Total",
+      "explanation": "Total implies addition, finding the sum of numbers, whereas the others imply taking away."
+    },
+    {
+      "id": 3,
+      "type": "multiple-choice",
+      "question_text": "In the equation 10 - 3 = 7, what is the '10' called?",
+      "options": [
+        "Subtrahend",
+        "Minuend",
+        "Difference",
+        "Operator"
+      ],
+      "correct_answer": "Minuend",
+      "explanation": "The minuend is the number from which you are subtracting."
+    },
+    {
+      "id": 4,
+      "type": "fill-in-blank",
+      "question_text": "Subtraction is the _______ operation of addition.",
+      "correct_answers": [
+        "inverse",
+        "opposite",
+        "reverse"
+      ],
+      "case_sensitive": false,
+      "explanation": "Subtraction undoes the action of addition; hence, it is the inverse operation."
+    },
+    {
+      "id": 5,
+      "type": "multiple-choice",
+      "question_text": "What happens when you subtract a larger number from a smaller number?",
+      "options": [
+        "The result is always positive.",
+        "The result is always zero.",
+        "The result is a negative number.",
+        "You cannot perform that calculation."
+      ],
+      "correct_answer": "The result is a negative number.",
+      "explanation": "Subtracting a larger number from a smaller number results in a negative difference. For example, 5 - 10 = -5."
+    }
+  ],
+  "created_at": "20251019_095835"
+}

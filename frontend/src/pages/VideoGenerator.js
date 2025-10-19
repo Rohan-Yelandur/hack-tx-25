@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { API_BASE_URL } from '../config/constants';
 import { useLessonContext } from '../context/LessonContext';
 import QuizContainer from '../components/Quiz/QuizContainer';
@@ -242,110 +242,118 @@ function VideoGenerator({ showSplash }) {
     await Promise.allSettled([videoPromise, quizPromise]);
   };
 
+  // Determine if input section should be shown
+  const showInputSection = !videoLoading && !videoData;
+
   return (
     <div className="video-generator">
       {/* Input Section */}
-      <motion.div 
-        className="input-section"
-        initial={showSplash ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: showSplash ? 0.3 : 0 }}
-      >
-        <h2 className="input-title">
-          Generate <span className="highlight-cyan">Lessons</span> with AI
-        </h2>
-        
-        <div className="input-container">
+      <AnimatePresence mode="wait">
+        {showInputSection && (
           <motion.div 
-            className="chat-input-wrapper"
-            initial={{ height: 'auto' }}
-            animate={{ height: 'auto' }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="input-section"
+            initial={showSplash ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20, transition: { duration: 0.4 } }}
+            transition={{ duration: 0.8, delay: showSplash ? 0.3 : 0 }}
           >
-            <textarea
-              ref={textareaRef}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Ask a question or describe what you'd like to learn..."
-              disabled={videoLoading || quizLoading}
-              className="chat-input"
-              rows="1"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleGenerate();
-                }
-              }}
-            />
+            <h2 className="input-title">
+              Generate <span className="highlight-cyan">Lessons</span> with AI
+            </h2>
             
-            <div className="input-controls">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf"
-                onChange={handleFileSelect}
-                style={{ display: 'none' }}
-              />
-              
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={videoLoading || quizLoading}
-                className="attach-btn celestial-btn"
-                title="Attach PDF"
+            <div className="input-container">
+              <motion.div 
+                className="chat-input-wrapper"
+                initial={{ height: 'auto' }}
+                animate={{ height: 'auto' }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                </svg>
-              </button>
+                <textarea
+                  ref={textareaRef}
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder="Ask a question or describe what you'd like to learn..."
+                  disabled={videoLoading || quizLoading}
+                  className="chat-input"
+                  rows="1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleGenerate();
+                    }
+                  }}
+                />
+                
+                <div className="input-controls">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileSelect}
+                    style={{ display: 'none' }}
+                  />
+                  
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={videoLoading || quizLoading}
+                    className="attach-btn celestial-btn"
+                    title="Attach PDF"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                    </svg>
+                  </button>
 
-              <button
-                onClick={handleGenerate}
-                disabled={(videoLoading || quizLoading) || !prompt.trim()}
-                className="send-btn celestial-btn"
-                title="Generate Animation"
-              >
-                {(videoLoading || quizLoading) ? (
-                  <div className="btn-spinner"></div>
-                ) : (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                  </svg>
-                )}
-              </button>
+                  <button
+                    onClick={handleGenerate}
+                    disabled={(videoLoading || quizLoading) || !prompt.trim()}
+                    className="send-btn celestial-btn"
+                    title="Generate Animation"
+                  >
+                    {(videoLoading || quizLoading) ? (
+                      <div className="btn-spinner"></div>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+
+              {/* PDF Preview */}
+              {pdfPreview && (
+                <motion.div 
+                  className="pdf-preview"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="pdf-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <text x="8" y="16" fontSize="6" fill="currentColor">PDF</text>
+                    </svg>
+                  </div>
+                  <div className="pdf-info">
+                    <div className="pdf-name">{pdfPreview.name}</div>
+                    <div className="pdf-size">{pdfPreview.size}</div>
+                  </div>
+                  <button onClick={handleRemovePdf} className="pdf-remove" title="Remove PDF">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </motion.div>
+              )}
             </div>
           </motion.div>
-
-          {/* PDF Preview */}
-          {pdfPreview && (
-            <motion.div 
-              className="pdf-preview"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="pdf-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <text x="8" y="16" fontSize="6" fill="currentColor">PDF</text>
-                </svg>
-              </div>
-              <div className="pdf-info">
-                <div className="pdf-name">{pdfPreview.name}</div>
-                <div className="pdf-size">{pdfPreview.size}</div>
-              </div>
-              <button onClick={handleRemovePdf} className="pdf-remove" title="Remove PDF">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </motion.div>
-          )}
-        </div>
-      </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Error Message */}
       {error && (
@@ -359,14 +367,31 @@ function VideoGenerator({ showSplash }) {
       {videoLoading && (
         <div className="message-card loading-message">
           <ConstellationLoading />
-          <p style={{ marginTop: '1rem', color: '#9ca3af' }}>Generating your video...</p>
         </div>
       )}
 
       {/* Video Section */}
       {videoData && (
-        <div className="video-section">
-          <h2 className="section-title">Your Animation</h2>
+        <motion.div 
+          className="video-section"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="section-header">
+            <h2 className="section-title">Your Animation</h2>
+            <button
+              onClick={handleNewLesson}
+              className="new-lesson-btn"
+              title="Create new lesson"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              New Lesson
+            </button>
+          </div>
 
           {/* Action Buttons */}
           <div className="action-buttons">
@@ -389,50 +414,49 @@ function VideoGenerator({ showSplash }) {
               <div className="share-section">
                 {!currentLesson.sharedToCommunity ? (
                   <div className="share-container">
-                    {/* Tag Input */}
-                    <div className="tag-input-section">
-                      <label className="tag-label">Add tags (optional, max 5):</label>
-                      <div className="tag-input-wrapper">
-                        <input
-                          type="text"
-                          value={tagInput}
-                          onChange={(e) => setTagInput(e.target.value)}
-                          onKeyDown={handleAddTag}
-                          placeholder="e.g., math, physics, tutorial"
-                          className="tag-input"
-                          maxLength={20}
-                          disabled={tags.length >= 5}
-                        />
-                        {tags.length < 5 && (
-                          <small className="tag-hint">Press Enter to add tag</small>
-                        )}
-                      </div>
-                      {/* Tag Display */}
-                      {tags.length > 0 && (
-                        <div className="tags-display">
-                          {tags.map((tag, index) => (
-                            <span key={index} className="tag-pill">
-                              {tag}
-                              <button
-                                onClick={() => handleRemoveTag(tag)}
-                                className="tag-remove"
-                                aria-label="Remove tag"
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                    {/* Tag Input - Inline with Share Button */}
+                    <div className="inline-tag-section">
+                      <input
+                        type="text"
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={handleAddTag}
+                        placeholder="Add tags (optional)"
+                        className="inline-tag-input"
+                        maxLength={20}
+                        disabled={tags.length >= 5}
+                      />
+                      
+                      <button
+                        onClick={handleShareToCommunity}
+                        disabled={sharingLoading}
+                        className="share-btn"
+                      >
+                        {sharingLoading ? 'Sharing...' : '✨ Share to Community'}
+                      </button>
                     </div>
 
-                    <button
-                      onClick={handleShareToCommunity}
-                      disabled={sharingLoading}
-                      className="share-btn"
-                    >
-                      {sharingLoading ? 'Sharing...' : '✨ Share to Community'}
-                    </button>
+                    {/* Tag Display */}
+                    {tags.length > 0 && (
+                      <div className="tags-display">
+                        {tags.map((tag, index) => (
+                          <span key={index} className="tag-pill">
+                            {tag}
+                            <button
+                              onClick={() => handleRemoveTag(tag)}
+                              className="tag-remove"
+                              aria-label="Remove tag"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {tags.length < 5 && (
+                      <small className="tag-hint">Press Enter to add tags (max 5)</small>
+                    )}
                   </div>
                 ) : (
                   <div className="shared-message">
@@ -454,16 +478,16 @@ function VideoGenerator({ showSplash }) {
               Your browser does not support the video tag.
             </video>
           </div>
-        </div>
+        </motion.div>
       )}
 
-      {/* Quiz Loading */}
+      {/* Quiz Loading
       {quizLoading && (
         <div className="message-card loading-message" style={{ marginTop: '2rem' }}>
           <ConstellationLoading />
           <p style={{ marginTop: '1rem', color: '#9ca3af' }}>Generating your quiz...</p>
         </div>
-      )}
+      )} */}
 
       {/* Quiz Section */}
       {quizData && quizId && (

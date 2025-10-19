@@ -322,9 +322,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   gap: 1rem;
   flex-wrap: wrap;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(139, 127, 216, 0.15);
 }
 
 .header-buttons {
@@ -355,21 +357,40 @@
 
 .new-lesson-btn {
   display: flex;
-  width: inherit;
   align-items: center;
-  gap: 0rem;
-  padding: 0.75rem 0.75rem;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #e8e9ed;
   background: linear-gradient(135deg, rgba(139, 127, 216, 0.2), rgba(77, 212, 232, 0.2));
   border: 1px solid rgba(139, 127, 216, 0.3);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
   position: relative;
   overflow: hidden;
+  font-family: 'Exo 2', sans-serif;
+}
+
+.new-lesson-btn:hover {
+  background: linear-gradient(135deg, rgba(139, 127, 216, 0.3), rgba(77, 212, 232, 0.3));
+  border-color: #8b7fd8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(139, 127, 216, 0.4);
+}
+
+.new-lesson-btn:active {
+  transform: translateY(0);
+}
+
+.new-lesson-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.new-lesson-btn:hover svg {
+  transform: rotate(90deg);
 }
 
 .video-container {

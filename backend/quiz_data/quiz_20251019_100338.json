@@ -1,0 +1,69 @@
+{
+  "quiz_id": "20251019_100338",
+  "video_id": null,
+  "prompt": "Explain subtraction",
+  "questions": [
+    {
+      "id": 1,
+      "type": "step-by-step",
+      "question_text": "Sarah has 23 apples and gives 8 to her friend. How many apples does Sarah have left? Solve this subtraction problem step-by-step.",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "Write the subtraction equation. What is 23 - 8?",
+          "correct_answer": "15",
+          "hint": "Start with the total number of apples and take away the number given away.",
+          "explanation": "Subtracting 8 from 23 gives us the number of apples Sarah has left."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "multiple-choice",
+      "question_text": "Which of the following is another word for subtraction?",
+      "options": [
+        "Addition",
+        "Multiplication",
+        "Taking away",
+        "Combining"
+      ],
+      "correct_answer": "Taking away",
+      "explanation": "Subtraction involves reducing a quantity, which is the same as taking away."
+    },
+    {
+      "id": 3,
+      "type": "multiple-choice",
+      "question_text": "What happens to the value of a number when you subtract from it?",
+      "options": [
+        "It increases.",
+        "It stays the same.",
+        "It decreases.",
+        "It doubles."
+      ],
+      "correct_answer": "It decreases.",
+      "explanation": "Subtraction always reduces the value of a number unless you are subtracting zero."
+    },
+    {
+      "id": 4,
+      "type": "fill-in-blank",
+      "question_text": "The number we are subtracting from is called the _________.",
+      "correct_answers": [
+        "minuend"
+      ],
+      "case_sensitive": false,
+      "explanation": "The minuend is the number from which another number is subtracted."
+    },
+    {
+      "id": 5,
+      "type": "fill-in-blank",
+      "question_text": "Subtraction is the __________ operation of addition.",
+      "correct_answers": [
+        "inverse",
+        "opposite"
+      ],
+      "case_sensitive": false,
+      "explanation": "Subtraction undoes addition. It is the opposite operation."
+    }
+  ],
+  "created_at": "20251019_100338"
+}
