@@ -1,0 +1,92 @@
+{
+  "quiz_id": "20251019_100914",
+  "video_id": null,
+  "prompt": "explain matrix multiplication",
+  "questions": [
+    {
+      "id": 1,
+      "type": "multiple-choice",
+      "question_text": "Which of the following conditions must be met to multiply two matrices, A and B, where A is of size m x n and B is of size p x q?",
+      "options": [
+        "m must equal q",
+        "n must equal q",
+        "m must equal p",
+        "n must equal p"
+      ],
+      "correct_answer": "n must equal p",
+      "explanation": "For matrix multiplication to be defined, the number of columns in the first matrix (A) must equal the number of rows in the second matrix (B).  Therefore, n must equal p."
+    },
+    {
+      "id": 2,
+      "type": "step-by-step",
+      "question_text": "Multiply the following matrices:  A = [[1, 2], [3, 4]] and B = [[5, 6], [7, 8]]",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "Calculate the element in the first row and first column of the resulting matrix (C11).",
+          "correct_answer": "19",
+          "hint": "Multiply the first row of A by the first column of B.  (1*5) + (2*7)",
+          "explanation": "(1 * 5) + (2 * 7) = 5 + 14 = 19"
+        },
+        {
+          "stage_number": 2,
+          "prompt": "Calculate the element in the first row and second column of the resulting matrix (C12).",
+          "correct_answer": "22",
+          "hint": "Multiply the first row of A by the second column of B. (1*6) + (2*8)",
+          "explanation": "(1 * 6) + (2 * 8) = 6 + 16 = 22"
+        },
+        {
+          "stage_number": 3,
+          "prompt": "Calculate the element in the second row and first column of the resulting matrix (C21).",
+          "correct_answer": "43",
+          "hint": "Multiply the second row of A by the first column of B. (3*5) + (4*7)",
+          "explanation": "(3 * 5) + (4 * 7) = 15 + 28 = 43"
+        },
+        {
+          "stage_number": 4,
+          "prompt": "Calculate the element in the second row and second column of the resulting matrix (C22).",
+          "correct_answer": "50",
+          "hint": "Multiply the second row of A by the second column of B. (3*6) + (4*8)",
+          "explanation": "(3 * 6) + (4 * 8) = 18 + 32 = 50"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "multiple-choice",
+      "question_text": "If A is a 2x3 matrix and B is a 3x4 matrix, what is the size of the resulting matrix C when you multiply A * B?",
+      "options": [
+        "3x3",
+        "2x4",
+        "3x2",
+        "4x2"
+      ],
+      "correct_answer": "2x4",
+      "explanation": "When multiplying an m x n matrix by an n x p matrix, the resulting matrix will be m x p.  In this case, 2x3 * 3x4 results in a 2x4 matrix."
+    },
+    {
+      "id": 4,
+      "type": "fill-in-blank",
+      "question_text": "Matrix multiplication is generally not _____, meaning that A * B is not necessarily equal to B * A.",
+      "correct_answers": [
+        "commutative"
+      ],
+      "case_sensitive": false,
+      "explanation": "Unlike scalar multiplication, the order of matrices in matrix multiplication matters.  Therefore, it is not commutative."
+    },
+    {
+      "id": 5,
+      "type": "multiple-choice",
+      "question_text": "What is the dot product used for in matrix multiplication?",
+      "options": [
+        "Determining the dimensions of the resulting matrix.",
+        "Calculating each element of the resulting matrix.",
+        "Ensuring the matrices can be multiplied.",
+        "Transposing the second matrix."
+      ],
+      "correct_answer": "Calculating each element of the resulting matrix.",
+      "explanation": "The dot product of rows from the first matrix and columns from the second matrix is used to compute each individual element in the product matrix."
+    }
+  ],
+  "created_at": "20251019_100914"
+}

@@ -10,6 +10,7 @@ import CelestialDecorations from './components/CelestialDecorations';
 import ConstellationBackground from './components/ConstellationBackground';
 import SplashScreen from './components/SplashScreen';
 import { LessonProvider } from './context/LessonContext';
+import About from './pages/About'
 
 function AppContent() {
   const [showSplash, setShowSplash] = useState(true);
@@ -49,6 +50,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<VideoGenerator showSplash={shouldShowSplash} />} />
           <Route path="/community" element={<Community />} />
+          <Route path="/about" element={<About />} />
         </Routes>
       </main>
     </div>

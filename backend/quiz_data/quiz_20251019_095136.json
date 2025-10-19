@@ -1,0 +1,84 @@
+{
+  "quiz_id": "20251019_095136",
+  "video_id": null,
+  "prompt": "explain subtraction",
+  "questions": [
+    {
+      "id": 1,
+      "type": "step-by-step",
+      "question_text": "Sarah has 23 apples and gives 8 to her friend. How many apples does Sarah have left? Solve this subtraction problem step-by-step.",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "Write the subtraction equation representing the problem.",
+          "correct_answer": "23 - 8 = ?",
+          "hint": "Start with the total number of apples and subtract the number given away.",
+          "explanation": "We start with 23 (total apples) and subtract 8 (apples given away)."
+        },
+        {
+          "stage_number": 2,
+          "prompt": "Subtract the ones place: 3 - 8. Since 3 is smaller than 8, you need to borrow 10 from the tens place. What is the result after borrowing?",
+          "correct_answer": "13 - 8 = 5",
+          "hint": "Borrowing means reducing the tens place by 1 and adding 10 to the ones place.",
+          "explanation": "Borrowing 10 from the tens place in 23 makes it 13 - 8."
+        },
+        {
+          "stage_number": 3,
+          "prompt": "Since you borrowed from the tens place (20 became 10), what is left in the tens place? Combine it with the result from the ones place.",
+          "correct_answer": "15",
+          "hint": "Remember the tens place is now 1 after borrowing.",
+          "explanation": "We have 1 in the tens place and 5 in the ones place, giving us 15."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "multiple-choice",
+      "question_text": "What is another word for subtraction?",
+      "options": [
+        "Sum",
+        "Difference",
+        "Product",
+        "Quotient"
+      ],
+      "correct_answer": "Difference",
+      "explanation": "The result of a subtraction problem is called the difference."
+    },
+    {
+      "id": 3,
+      "type": "multiple-choice",
+      "question_text": "Which of the following best describes what subtraction does?",
+      "options": [
+        "Combines quantities",
+        "Splits quantities into equal groups",
+        "Determines how many are left when a quantity is reduced",
+        "Finds a quantity multiplied by itself"
+      ],
+      "correct_answer": "Determines how many are left when a quantity is reduced",
+      "explanation": "Subtraction takes away from a starting amount, showing the remaining amount."
+    },
+    {
+      "id": 4,
+      "type": "fill-in-blank",
+      "question_text": "Subtraction is the ______ operation of addition.",
+      "correct_answers": [
+        "inverse",
+        "opposite"
+      ],
+      "case_sensitive": false,
+      "explanation": "Subtraction reverses the effect of addition; hence it is the inverse or opposite operation."
+    },
+    {
+      "id": 5,
+      "type": "fill-in-blank",
+      "question_text": "In the equation 10 - 3 = 7, the number 7 is called the ______.",
+      "correct_answers": [
+        "difference",
+        "result"
+      ],
+      "case_sensitive": false,
+      "explanation": "The answer to a subtraction problem is known as the difference or the result."
+    }
+  ],
+  "created_at": "20251019_095136"
+}

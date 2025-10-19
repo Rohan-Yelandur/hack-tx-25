@@ -7,7 +7,7 @@ import ConstellationLoading from '../components/ConstellationLoading';
 import './VideoGenerator.css';
 
 function VideoGenerator({ showSplash }) {
-  const { currentLesson, updateLesson, clearLesson } = useLessonContext();
+  const { currentLesson, updateLesson, clearLesson, setVideoLoading, setQuizLoading } = useLessonContext();
 
   const [prompt, setPrompt] = useState(currentLesson.prompt || '');
   const [error, setError] = useState('');
@@ -17,16 +17,15 @@ function VideoGenerator({ showSplash }) {
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
 
-  // Separate loading and data states for video and quiz
-  const [videoLoading, setVideoLoading] = useState(false);
-  const [quizLoading, setQuizLoading] = useState(false);
-  const [videoData, setVideoData] = useState(null);
-  const [quizData, setQuizData] = useState(null);
-  const [quizId, setQuizId] = useState(null);
-
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
+
+  // Get data and loading states from context
+  const videoLoading = currentLesson.videoLoading;
+  const quizLoading = currentLesson.quizLoading;
+  const quizData = currentLesson.quizData;
+  const quizId = currentLesson.quizId;
 
   // Initialize from context when component mounts
   useEffect(() => {
@@ -68,20 +67,19 @@ function VideoGenerator({ showSplash }) {
   };
 
   const handleDownload = async () => {
-    const videoId = videoData?.videoId || currentLesson.videoId;
-    if (!videoId) {
+    if (!currentLesson.videoId) {
       setError('No video to download');
       return;
     }
 
     try {
       // Use the new download endpoint that merges video and audio
-      const downloadUrl = `${API_BASE_URL}/api/download-video/${videoId}`;
+      const downloadUrl = `${API_BASE_URL}/api/download-video/${currentLesson.videoId}`;
 
       // Create a temporary link and trigger download
       const a = document.createElement('a');
       a.href = downloadUrl;
-      a.download = `animation_${videoId}.mp4`;
+      a.download = `animation_${currentLesson.videoId}.mp4`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -106,8 +104,7 @@ function VideoGenerator({ showSplash }) {
   };
 
   const handleShareToCommunity = async () => {
-    const videoId = videoData?.videoId || currentLesson.videoId;
-    if (!videoId) {
+    if (!currentLesson.videoId) {
       setError('No video to share');
       return;
     }
@@ -116,7 +113,7 @@ function VideoGenerator({ showSplash }) {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/videos/${videoId}/share-to-community`, {
+      const response = await fetch(`${API_BASE_URL}/api/videos/${currentLesson.videoId}/share-to-community`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -146,9 +143,6 @@ function VideoGenerator({ showSplash }) {
     setError('');
     setPdfFile(null);
     setPdfPreview(null);
-    setVideoData(null);
-    setQuizData(null);
-    setQuizId(null);
     setTags([]);
     setTagInput('');
     if (fileInputRef.current) {
@@ -167,9 +161,6 @@ function VideoGenerator({ showSplash }) {
     clearLesson();
     setTags([]);
     setTagInput('');
-    setVideoData(null);
-    setQuizData(null);
-    setQuizId(null);
     setVideoLoading(true);
     setQuizLoading(true);
 
@@ -188,20 +179,13 @@ function VideoGenerator({ showSplash }) {
       .then(data => {
         console.log('Video API Response:', data);
         if (data.success && data.final_video_url) {
-          setVideoData({
-            videoUrl: `${API_BASE_URL}${data.final_video_url}`,
-            narrationScript: data.script_text || '',
-            videoId: data.video_id || '',
-          });
-
-          // Update lesson context
+          // Update lesson context with video data
           updateLesson({
             prompt: prompt,
             videoUrl: `${API_BASE_URL}${data.final_video_url}`,
             narrationScript: data.script_text || '',
             videoId: data.video_id || '',
             sharedToCommunity: false,
-            loading: false,
           });
         } else {
           setError(data.error || data.video_error || 'Failed to generate video');
@@ -225,8 +209,11 @@ function VideoGenerator({ showSplash }) {
       .then(data => {
         console.log('Quiz API Response:', data);
         if (data.success) {
-          setQuizData({ questions: data.questions });
-          setQuizId(data.quiz_id);
+          // Update lesson context with quiz data
+          updateLesson({
+            quizData: { questions: data.questions },
+            quizId: data.quiz_id,
+          });
         } else {
           console.warn('Quiz generation failed:', data.error);
         }
@@ -364,7 +351,7 @@ function VideoGenerator({ showSplash }) {
       )}
 
       {/* Video Section */}
-      {videoData && (
+      {currentLesson.hasContent && (
         <div className="video-section">
           <h2 className="section-title">Your Animation</h2>
 
@@ -385,7 +372,7 @@ function VideoGenerator({ showSplash }) {
             </button>
 
             {/* Share to Community Button */}
-            {videoData?.videoId && (
+            {currentLesson.videoId && (
               <div className="share-section">
                 {!currentLesson.sharedToCommunity ? (
                   <div className="share-container">
@@ -447,10 +434,10 @@ function VideoGenerator({ showSplash }) {
             <video
               ref={videoRef}
               controls
-              key={videoData.videoUrl}
+              key={currentLesson.videoUrl}
               className="video-player"
             >
-              <source src={videoData.videoUrl} type="video/mp4" />
+              <source src={currentLesson.videoUrl} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>
