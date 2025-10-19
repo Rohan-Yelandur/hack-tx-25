@@ -7,7 +7,9 @@ function Header() {
   return (
     <header className="header">
       <div className="header-content">
-        <h1 className="header-title">Manim Video Generator</h1>
+        <Link to="/" className="header-title">
+          <h1>Manim Video Generator</h1>
+        </Link>
         <nav className="header-nav">
           <Link
             to="/"

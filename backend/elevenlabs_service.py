@@ -78,36 +78,123 @@ class ElevenLabsService:
         Path(settings.AUDIO_DIR).mkdir(exist_ok=True)
         Path(settings.SCRIPTS_DIR).mkdir(exist_ok=True)
 
-    def generate_script(self, user_prompt: str) -> str:
+    def generate_script(self, user_prompt: str, pdf_path=None) -> str:
         """
         Generate an educational script using Gemini AI based on the user's question.
         Args:
             user_prompt: The user's question or topic to explain
+            pdf_path: Optional path to a PDF file for additional context
         Returns:
             A well-formatted educational script (optimized for 10-15 seconds)
         """
         try:
             print(f"[ElevenLabsService] Generating script for prompt: {user_prompt[:50]}...")
             
-            full_prompt = f"""
-            You are an expert educational content creator. The user has asked the following question:
+            # Prepare contents for Gemini
+            contents = []
+            
+            # If PDF is provided, upload it using the official Files API
+            if pdf_path:
+                try:
+                    from pathlib import Path
+                    import time
+                    import os
+                    
+                    print(f"[ElevenLabsService] Uploading PDF to Gemini Files API: {pdf_path}")
+                    
+                    # Check file size (max 50 MB recommended for Gemini 2.5 Flash)
+                    file_size_mb = os.path.getsize(str(pdf_path)) / (1024 * 1024)
+                    print(f"[ElevenLabsService] PDF file size: {file_size_mb:.2f} MB")
+                    
+                    if file_size_mb > 50:
+                        raise Exception(f"PDF file is too large ({file_size_mb:.2f} MB). Maximum recommended size is 50 MB.")
+                    
+                    # Upload PDF using the official SDK method
+                    uploaded_file = self.gemini_client.files.upload(file=str(pdf_path))
+                    
+                    print(f"[ElevenLabsService] PDF uploaded successfully")
+                    print(f"[ElevenLabsService] File name: {uploaded_file.name}")
+                    print(f"[ElevenLabsService] File URI: {uploaded_file.uri}")
+                    print(f"[ElevenLabsService] File state: {uploaded_file.state.name if hasattr(uploaded_file, 'state') else 'unknown'}")
+                    
+                    # Wait for file to be processed if needed
+                    max_wait = 30
+                    wait_interval = 2
+                    elapsed = 0
+                    
+                    while hasattr(uploaded_file, 'state') and uploaded_file.state.name == 'PROCESSING' and elapsed < max_wait:
+                        print(f"[ElevenLabsService] Waiting for file to be processed... ({elapsed}s)")
+                        time.sleep(wait_interval)
+                        # Refresh file state
+                        uploaded_file = self.gemini_client.files.get(name=uploaded_file.name)
+                        elapsed += wait_interval
+                    
+                    if hasattr(uploaded_file, 'state') and uploaded_file.state.name == 'FAILED':
+                        raise Exception(f"File processing failed: {uploaded_file.state}")
+                    
+                    print(f"[ElevenLabsService] File ready for use (state: {uploaded_file.state.name if hasattr(uploaded_file, 'state') else 'ACTIVE'})")
+                    print(f"[ElevenLabsService] Note: Uploaded files expire after 48 hours")
+                    
+                    # Create prompt
+                    full_prompt = f"""
+                    You are an expert educational content creator. The user has uploaded a PDF document and asked the following question:
 
-            "{user_prompt}"
+                    "{user_prompt}"
 
-            Create a clear, concise audio script that explains this concept or answers this question.
-            The script should be suitable for narration over an educational animation video.
-            
-            Keep the explanation engaging and easy to follow. Structure your script to naturally 
-            break into segments that can be visualized (e.g., introduction, key concepts, examples, conclusion).
-            
-            Target length: 10-15 seconds of spoken content (about 30-45 words).
-            
-            Return ONLY the script text, nothing else. Do not include timestamps or labels.
-            """
+                    Based on the content in the PDF document, create a clear, concise audio script that explains this concept or answers this question.
+                    The script should be suitable for narration over an educational animation video.
+                    
+                    Keep the explanation engaging and easy to follow. Structure your script to naturally 
+                    break into segments that can be visualized (e.g., introduction, key concepts, examples, conclusion).
+                    
+                    Target length: 10-15 seconds of spoken content (about 30-45 words).
+                    
+                    Return ONLY the script text, nothing else. Do not include timestamps or labels.
+                    """
+                    
+                    # Add the uploaded file to contents (this is how the official SDK works)
+                    contents.append(uploaded_file)
+                    contents.append(full_prompt)
+                except Exception as pdf_error:
+                    print(f"[ElevenLabsService WARNING] Failed to process PDF: {str(pdf_error)}")
+                    print("[ElevenLabsService] Continuing without PDF context")
+                    full_prompt = f"""
+                    You are an expert educational content creator. The user has asked the following question:
+
+                    "{user_prompt}"
+
+                    Create a clear, concise audio script that explains this concept or answers this question.
+                    The script should be suitable for narration over an educational animation video.
+                    
+                    Keep the explanation engaging and easy to follow. Structure your script to naturally 
+                    break into segments that can be visualized (e.g., introduction, key concepts, examples, conclusion).
+                    
+                    Target length: 10-15 seconds of spoken content (about 30-45 words).
+                    
+                    Return ONLY the script text, nothing else. Do not include timestamps or labels.
+                    """
+                    contents.append(full_prompt)
+            else:
+                full_prompt = f"""
+                You are an expert educational content creator. The user has asked the following question:
+
+                "{user_prompt}"
+
+                Create a clear, concise audio script that explains this concept or answers this question.
+                The script should be suitable for narration over an educational animation video.
+                
+                Keep the explanation engaging and easy to follow. Structure your script to naturally 
+                break into segments that can be visualized (e.g., introduction, key concepts, examples, conclusion).
+                
+                Target length: 10-15 seconds of spoken content (about 30-45 words).
+                
+                Return ONLY the script text, nothing else. Do not include timestamps or labels.
+                """
+                contents.append(full_prompt)
 
             response = self.gemini_client.models.generate_content(
                 model=settings.GEMINI_MODEL,
-                contents=full_prompt
+                contents=contents
             )
 
             script = response.text.strip()

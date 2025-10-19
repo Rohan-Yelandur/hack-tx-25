@@ -13,7 +13,7 @@ class Settings:
     ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
     
     # Model Configs
-    GEMINI_MODEL = "gemini-2.5-flash"
+    GEMINI_MODEL = "gemini-2.5-pro"
     ELEVENLABS_MODEL = "eleven_turbo_v2_5"
 
     # Manim Configuration

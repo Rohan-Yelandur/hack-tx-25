@@ -6,6 +6,7 @@ from manim_service import manim_service
 import threading
 import os
 import re
+from werkzeug.utils import secure_filename
 
 
 def register_routes(app):
@@ -16,25 +17,51 @@ def register_routes(app):
         """Generate a Manim video with synchronized narration.
         
         New flow:
-        1. Generate narration script from user prompt
+        1. Generate narration script from user prompt (with optional PDF)
         2. Generate audio with character-level timing data
         3. Use script + timing to generate synchronized Manim code
         4. Render video
         """
-        data = request.json
-        prompt = data.get('prompt', '')
+        # Handle both JSON and FormData
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            prompt = request.form.get('prompt', '')
+            pdf_file = request.files.get('pdf', None)
+        else:
+            data = request.json or {}
+            prompt = data.get('prompt', '')
+            pdf_file = None
         
         if not prompt:
             return jsonify({'error': 'Prompt is required'}), 400
         
+        # Handle PDF file if provided
+        pdf_path = None
+        if pdf_file and pdf_file.filename:
+            try:
+                from settings import settings
+                # Create temporary upload directory if needed
+                upload_dir = Path(settings.CODE_DIR).parent / 'temp_uploads'
+                upload_dir.mkdir(exist_ok=True)
+                
+                # Save PDF with secure filename
+                filename = secure_filename(pdf_file.filename)
+                pdf_path = upload_dir / filename
+                pdf_file.save(str(pdf_path))
+                print(f"[API] PDF uploaded: {pdf_path}")
+            except Exception as e:
+                print(f"[API] Error saving PDF: {str(e)}")
+                pdf_path = None
+        
         try:
             print(f"\n{'='*60}")
             print(f"[API] Starting video generation for prompt: {prompt[:50]}...")
+            if pdf_path:
+                print(f"[API] With PDF file: {pdf_path.name}")
             print(f"{'='*60}\n")
             
-            # Step 1: Generate narration script first
+            # Step 1: Generate narration script first (with PDF if provided)
             print("[API] Step 1: Generating narration script...")
-            narration_script = eleven_labs_service.generate_script(prompt)
+            narration_script = eleven_labs_service.generate_script(prompt, pdf_path=pdf_path)
             print(f"[API] Script generated: {narration_script[:100]}...\n")
             
             # Prepare storage for parallel results
@@ -139,6 +166,14 @@ def register_routes(app):
             # Return error if both failed
             if not video_result['path'] and not audio_result['path']:
                 return jsonify(response), 500
+            
+            # Clean up temporary PDF file if it exists
+            if pdf_path and pdf_path.exists():
+                try:
+                    pdf_path.unlink()
+                    print(f"[API] Cleaned up temporary PDF: {pdf_path}")
+                except Exception as e:
+                    print(f"[API] Failed to clean up PDF: {str(e)}")
             
             return jsonify(response)
             
