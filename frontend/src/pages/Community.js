@@ -7,16 +7,19 @@ function Community() {
   const [filteredVideos, setFilteredVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+<<<<<<< HEAD
   const [expandedCode, setExpandedCode] = useState({});
   const [selectedTags, setSelectedTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
+=======
+>>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
   const videoRefs = useRef({});
-  const audioRefs = useRef({});
 
   useEffect(() => {
     fetchVideos();
   }, []);
 
+<<<<<<< HEAD
   // Sync audio with video for a specific video ID
   useEffect(() => {
     filteredVideos.forEach((video) => {
@@ -52,6 +55,8 @@ function Community() {
     });
   }, [filteredVideos]);
 
+=======
+>>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
   const fetchVideos = async () => {
     try {
       setLoading(true);
@@ -83,6 +88,7 @@ function Community() {
     }
   };
 
+<<<<<<< HEAD
   // Filter videos when selected tags change
   useEffect(() => {
     if (selectedTags.length === 0) {
@@ -128,6 +134,8 @@ function Community() {
     }));
   };
 
+=======
+>>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
   const formatDate = (timestamp) => {
     const date = new Date(timestamp * 1000);
     return date.toLocaleString('en-US', {
@@ -214,21 +222,14 @@ function Community() {
                 ref={(el) => (videoRefs.current[video.id] = el)}
                 controls
                 className="video-player"
-                src={`${API_BASE_URL}${video.video_url}`}
+                src={`${API_BASE_URL}${video.final_video_url}`}
               >
                 Your browser does not support the video tag.
               </video>
-              {video.audio_url && (
-                <audio
-                  ref={(el) => (audioRefs.current[video.id] = el)}
-                  id={`audio-${video.id}`}
-                  src={`${API_BASE_URL}${video.audio_url}`}
-                  style={{ display: 'none' }}
-                />
-              )}
             </div>
 
             <div className="video-info">
+<<<<<<< HEAD
               {video.script_text && (
                 <div className="script-preview">
                   <h3>Narration</h3>
@@ -247,6 +248,8 @@ function Community() {
                 </div>
               )}
 
+=======
+>>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
               <div className="video-meta">
                 <span className="timestamp">
                   {formatDate(video.created_at)}
@@ -263,30 +266,6 @@ function Community() {
                   </svg>
                 </button>
               </div>
-
-              {video.manim_code_url && (
-                <div className="code-section">
-                  <button
-                    onClick={() => toggleCode(video.id)}
-                    className="toggle-code-button"
-                  >
-                    {expandedCode[video.id] ? 'Hide Code' : 'View Code'}
-                  </button>
-
-                  {expandedCode[video.id] && (
-                    <div className="code-container">
-                      <a
-                        href={`${API_BASE_URL}${video.manim_code_url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="view-code-link"
-                      >
-                        Open Code File →
-                      </a>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         ))}

@@ -14,16 +14,6 @@ function CelestialDecorations() {
         <div className="planet-surface"></div>
         <div className="planet-glow"></div>
       </div>
-
-      {/* Galaxy spiral */}
-      <div className="galaxy galaxy-1">
-        <div className="galaxy-core"></div>
-        <div className="galaxy-spiral"></div>
-      </div>
-
-      {/* Distant stars cluster */}
-      <div className="star-cluster cluster-1"></div>
-      <div className="star-cluster cluster-2"></div>
     </div>
   );
 }

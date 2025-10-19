@@ -5,6 +5,7 @@
 # Video output folders
 manim_code
 manim_videos
+final_videos
 
 # Audio output folders
 elevenlabs_audio

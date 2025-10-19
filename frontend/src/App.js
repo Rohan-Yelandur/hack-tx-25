@@ -5,21 +5,26 @@ import VideoGenerator from './pages/VideoGenerator';
 import Community from './pages/Community';
 import Starfield from './components/Starfield';
 import CelestialDecorations from './components/CelestialDecorations';
+import ConstellationBackground from './components/ConstellationBackground';
+import { LessonProvider } from './context/LessonContext';
 
 function App() {
   return (
     <Router>
-      <div className="App">
-        <Starfield />
-        <CelestialDecorations />
-        <Header />
-        <main className="App-main">
-          <Routes>
-            <Route path="/" element={<VideoGenerator />} />
-            <Route path="/community" element={<Community />} />
-          </Routes>
-        </main>
-      </div>
+      <LessonProvider>
+        <div className="App">
+          <Starfield />
+          <ConstellationBackground />
+          <CelestialDecorations />
+          <Header />
+          <main className="App-main">
+            <Routes>
+              <Route path="/" element={<VideoGenerator />} />
+              <Route path="/community" element={<Community />} />
+            </Routes>
+          </main>
+        </div>
+      </LessonProvider>
     </Router>
   );
 }

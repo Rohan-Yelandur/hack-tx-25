@@ -1,6 +1,6 @@
 .header {
-  padding: 2rem 2rem 1rem;
-  position: absolute;
+  padding: .5rem 2rem 1rem;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -41,20 +41,11 @@
   font-size: 1rem;
   font-weight: 500;
   padding: 0.5rem 1rem;
-  transition: all 0.3s ease;
+  transition: color 0.3s ease;
   position: relative;
 }
 
-.nav-link:hover {
-  color: #fff;
-  background: rgba(102, 126, 234, 0.1);
-}
-
-.nav-link.active {
-  color: #fff;
-}
-
-.nav-link.active::after {
+.nav-link::after {
   content: '';
   position: absolute;
   bottom: -2px;
@@ -63,6 +54,24 @@
   height: 2px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 2px;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #fff;
+}
+
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+.nav-link.active {
+  color: #fff;
+}
+
+.nav-link.active::after {
+  transform: scaleX(1);
 }
 
 /* Responsive */

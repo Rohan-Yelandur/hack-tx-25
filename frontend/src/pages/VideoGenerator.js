@@ -1,67 +1,33 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../config/constants';
+import { useLessonContext } from '../context/LessonContext';
 import './VideoGenerator.css';
 
 function VideoGenerator() {
-  const [prompt, setPrompt] = useState('');
-  const [loading, setLoading] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
+  const { currentLesson, updateLesson, clearLesson, setLoading: setContextLoading } = useLessonContext();
+  
+  const [prompt, setPrompt] = useState(currentLesson.prompt || '');
   const [error, setError] = useState('');
-  const [manimCode, setManimCode] = useState('');
-  const [narrationScript, setNarrationScript] = useState('');
-  const [audioUrl, setAudioUrl] = useState('');
-  const [showContent, setShowContent] = useState(false);
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfPreview, setPdfPreview] = useState(null);
-  const [videoId, setVideoId] = useState('');
-  const [sharedToCommunity, setSharedToCommunity] = useState(false);
   const [sharingLoading, setSharingLoading] = useState(false);
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
 
   const videoRef = useRef(null);
-  const audioRef = useRef(null);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
 
-  // Synchronize audio with video playback
+  // Get loading state from context
+  const loading = currentLesson.loading;
+
+  // Initialize from context when component mounts
   useEffect(() => {
-    const video = videoRef.current;
-    const audio = audioRef.current;
-
-    // Skip sync if no audio URL or refs are missing
-    if (!video || !audio || !audioUrl) return;
-
-    const syncPlay = () => {
-      if (audioUrl) {
-        audio.currentTime = video.currentTime;
-        audio.play().catch(err => console.log('Audio play failed:', err));
-      }
-    };
-
-    const syncPause = () => {
-      if (audioUrl) {
-        audio.pause();
-      }
-    };
-
-    const syncSeeking = () => {
-      if (audioUrl) {
-        audio.currentTime = video.currentTime;
-      }
-    };
-
-    video.addEventListener('play', syncPlay);
-    video.addEventListener('pause', syncPause);
-    video.addEventListener('seeking', syncSeeking);
-
-    return () => {
-      video.removeEventListener('play', syncPlay);
-      video.removeEventListener('pause', syncPause);
-      video.removeEventListener('seeking', syncSeeking);
-    };
-  }, [showContent, audioUrl]);
+    if (currentLesson.hasContent) {
+      setPrompt(currentLesson.prompt);
+    }
+  }, [currentLesson.hasContent, currentLesson.prompt]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -133,7 +99,7 @@ function VideoGenerator() {
   };
 
   const handleShareToCommunity = async () => {
-    if (!videoId) {
+    if (!currentLesson.videoId) {
       setError('No video to share');
       return;
     }
@@ -142,7 +108,7 @@ function VideoGenerator() {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/videos/${videoId}/share-to-community`, {
+      const response = await fetch(`${API_BASE_URL}/api/videos/${currentLesson.videoId}/share-to-community`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -155,7 +121,7 @@ function VideoGenerator() {
       const data = await response.json();
 
       if (data.success) {
-        setSharedToCommunity(true);
+        updateLesson({ sharedToCommunity: true });
       } else {
         setError(data.error || 'Failed to share video');
       }
@@ -166,14 +132,26 @@ function VideoGenerator() {
     }
   };
 
+  const handleNewLesson = () => {
+    clearLesson();
+    setPrompt('');
+    setError('');
+    setPdfFile(null);
+    setPdfPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleGenerate = async () => {
     if (!prompt.trim()) {
       setError('Please enter a prompt');
       return;
     }
 
-    setLoading(true);
+    setContextLoading(true);
     setError('');
+<<<<<<< HEAD
     setVideoUrl('');
     setManimCode('');
     setNarrationScript('');
@@ -183,6 +161,8 @@ function VideoGenerator() {
     setSharedToCommunity(false);
     setTags([]);
     setTagInput('');
+=======
+>>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
 
     try {
       const formData = new FormData();
@@ -200,21 +180,19 @@ function VideoGenerator() {
       console.log('API Response:', data); // Debug log
 
       if (data.success) {
-        // Show content even if only video is ready (audio is optional)
-        if (data.video_url) {
-          setVideoUrl(`${API_BASE_URL}${data.video_url}`);
-          setManimCode(data.manim_code || '');
-          setNarrationScript(data.script_text || '');
-          setAudioUrl(`${API_BASE_URL}${data.audio_url}`);
-          setVideoId(data.video_id || '');
-          setShowContent(true);
-          
-          // Log warnings if audio failed
-          if (!data.audio_url && data.audio_error) {
-            console.warn('Audio generation failed:', data.audio_error);
-          }
+        // Use the final combined video with embedded audio
+        if (data.final_video_url) {
+          // Update the lesson context with new data
+          updateLesson({
+            prompt: prompt,
+            videoUrl: `${API_BASE_URL}${data.final_video_url}`,
+            narrationScript: data.script_text || '',
+            videoId: data.video_id || '',
+            sharedToCommunity: false,
+            loading: false,
+          });
         } else {
-          setError(data.video_error || 'Failed to generate video');
+          setError(data.video_error || data.audio_error || 'Failed to generate video');
         }
       } else {
         setError(data.error || 'Failed to generate video');
@@ -223,16 +201,22 @@ function VideoGenerator() {
       console.error('Fetch error:', err);
       setError('Failed to connect to server: ' + err.message);
     } finally {
-      setLoading(false);
+      setContextLoading(false);
     }
   };
 
   return (
     <div className="video-generator">
+      {/* Hero Section */}
+      <div className="hero-section">
+        <h1 className="hero-title">Canopus</h1>
+        <p className="hero-subtitle">We Help You Connect the Dots</p>
+      </div>
+
       {/* Input Section */}
       <div className="input-section">
         <h2 className="input-title">
-          Generate <span className="highlight-cyan">Animations</span> with AI
+          Generate <span className="highlight-cyan">Lessons</span> with AI
         </h2>
         
         <div className="input-container">
@@ -344,8 +328,9 @@ function VideoGenerator() {
       )}
 
       {/* Video Section */}
-      {showContent && (
+      {currentLesson.hasContent && (
         <div className="video-section">
+<<<<<<< HEAD
           <h2 className="section-title">Your Animation</h2>
 
           {/* Action Buttons */}
@@ -421,46 +406,60 @@ function VideoGenerator() {
                 )}
               </div>
             )}
+=======
+          <div className="section-header">
+            <h2 className="section-title">Your Animation</h2>
+            <div className="header-buttons">
+              {currentLesson.videoId && !currentLesson.sharedToCommunity && (
+                <button
+                  onClick={handleShareToCommunity}
+                  disabled={sharingLoading}
+                  className="share-btn celestial-btn"
+                  title="Share to Community"
+                >
+                  {sharingLoading ? (
+                    <div className="btn-spinner"></div>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+                    </svg>
+                  )}
+                </button>
+              )}
+              {currentLesson.videoId && currentLesson.sharedToCommunity && (
+                <div className="shared-indicator" title="Shared to Community">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              )}
+              <button
+                onClick={handleNewLesson}
+                className="new-lesson-btn celestial-btn"
+                title="Start a new lesson"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+              </button>
+            </div>
+>>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
           </div>
 
           <div className="video-container">
             <video
               ref={videoRef}
               controls
-              key={videoUrl}
+              key={currentLesson.videoUrl}
               className="video-player"
             >
-              <source src={videoUrl} type="video/mp4" />
+              <source src={currentLesson.videoUrl} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
-            {/* Hidden audio element that syncs with video - only if audio exists */}
-            {audioUrl && (
-              <audio
-                ref={audioRef}
-                style={{ display: 'none' }}
-                key={audioUrl}
-              >
-                <source src={audioUrl} type="audio/mpeg" />
-              </audio>
-            )}
           </div>
-
-          {/* Narration Script Display */}
-          {narrationScript && (
-            <div className="audio-section">
-              <h3 className="section-subtitle">AI Narration Script</h3>
-              <div className="narration-script">
-                <p className="script-text">{narrationScript}</p>
-              </div>
-            </div>
-          )}
-
-          {/* {manimCode && (
-            <details className="code-section">
-              <summary className="code-summary">View Generated Code</summary>
-              <pre className="code-block">{manimCode}</pre>
-            </details>
-          )} */}
         </div>
       )}
     </div>

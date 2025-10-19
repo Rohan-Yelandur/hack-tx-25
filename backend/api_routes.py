@@ -172,32 +172,43 @@ def register_routes(app):
                 'script_text': narration_script
             }
             
-            # Add audio results
-            if audio_result['path']:
-                response['audio_url'] = f'/api/elevenlabs-audio/{Path(audio_result["path"]).name}'
-                response['script_url'] = f'/api/elevenlabs-script/{Path(audio_result["script_path"]).name}'
-            else:
+            # Track if generation succeeded (need both audio and video for final output)
+            if not audio_result['path']:
                 response['audio_error'] = audio_result['error'] or 'Failed to generate audio'
                 response['success'] = False
             
-            # Add video results
-            if video_result['path']:
-                video_filename = Path(video_result["path"]).name
-                # Extract video ID from filename (e.g., "20251018_195826.mp4" -> "20251018_195826")
-                video_id = re.match(r'(\d{8}_\d{6})\.mp4', video_filename)
-                response['video_url'] = f'/api/manim-video/{video_filename}'
-                response['manim_code_url'] = f'/api/manim-code/{Path(video_result["manim_code_path"]).name}'
-                response['manim_code'] = video_result['manim_code']
-                if video_id:
-                    response['video_id'] = video_id.group(1)
-            else:
+            if not video_result['path']:
                 response['video_error'] = video_result['error'] or 'Failed to render video'
-                # Don't mark as completely failed if audio succeeded
-                if not audio_result['path']:
+                response['success'] = False
+            
+            # Combine video and audio if both succeeded
+            if video_result['path'] and audio_result['path']:
+                print("[API] Step 3: Combining video and audio...")
+                final_video_path = manim_service.combine_video_audio(
+                    video_result['path'],
+                    audio_result['path']
+                )
+                
+                if final_video_path:
+                    final_video_filename = Path(final_video_path).name
+                    response['final_video_url'] = f'/api/final-video/{final_video_filename}'
+                    response['script_url'] = f'/api/elevenlabs-script/{Path(audio_result["script_path"]).name}'
+                    response['manim_code_url'] = f'/api/manim-code/{Path(video_result["manim_code_path"]).name}'
+                    response['manim_code'] = video_result['manim_code']
+                    
+                    # Extract video ID from filename (e.g., "20251018_195826.mp4" -> "20251018_195826")
+                    video_id_match = re.match(r'(\d{8}_\d{6})\.mp4', final_video_filename)
+                    if video_id_match:
+                        response['video_id'] = video_id_match.group(1)
+                    
+                    print(f"[API] Final video created: {final_video_filename}")
+                else:
+                    print("[API] Warning: Failed to combine video and audio")
+                    response['combine_error'] = 'Failed to combine video and audio'
                     response['success'] = False
             
-            # Return error if both failed
-            if not video_result['path'] and not audio_result['path']:
+            # Return error if both failed or combining failed
+            if not response.get('final_video_url'):
                 return jsonify(response), 500
             
             # Clean up temporary PDF file if it exists
@@ -289,12 +300,12 @@ def register_routes(app):
             community_video_ids = list(community_videos_dict.keys())
             print(f"[API-Videos] Found {len(community_video_ids)} community videos")
 
-            # Get all video files
-            video_dir = Path(settings.OUTPUT_DIR)
-            if not video_dir.exists():
+            # Get all final video files (combined video + audio)
+            final_videos_dir = Path(settings.FINAL_VIDEOS_DIR)
+            if not final_videos_dir.exists():
                 return jsonify({'success': True, 'videos': []})
 
-            video_files = sorted(video_dir.glob('*.mp4'), key=os.path.getmtime, reverse=True)
+            video_files = sorted(final_videos_dir.glob('*.mp4'), key=os.path.getmtime, reverse=True)
 
             # Get all audio and script files upfront
             audio_dir = Path(settings.AUDIO_DIR)
@@ -380,15 +391,12 @@ def register_routes(app):
                 code_files = list(code_dir.glob(f'{timestamp}.py'))
                 code_path = code_files[0] if code_files else None
 
-                # Build video entry
+                # Build video entry with final_video_url
                 video_entry = {
                     'id': timestamp,
-                    'video_url': f'/api/manim-video/{video_filename}',
+                    'final_video_url': f'/api/final-video/{video_filename}',
                     'created_at': os.path.getmtime(video_path)
                 }
-
-                if audio_path:
-                    video_entry['audio_url'] = f'/api/elevenlabs-audio/{audio_path.name}'
 
                 if script_path:
                     video_entry['script_url'] = f'/api/elevenlabs-script/{script_path.name}'
@@ -428,9 +436,9 @@ def register_routes(app):
         try:
             from settings import settings
 
-            # Verify the video exists
-            video_dir = Path(settings.OUTPUT_DIR)
-            video_path = video_dir / f'{video_id}.mp4'
+            # Verify the video exists in final_videos
+            final_videos_dir = Path(settings.FINAL_VIDEOS_DIR)
+            video_path = final_videos_dir / f'{video_id}.mp4'
 
             if not video_path.exists():
                 return jsonify({
@@ -536,6 +544,7 @@ def register_routes(app):
 
 
     # ==================== Resource Endpoints ====================
+<<<<<<< HEAD
 
     @app.route('/api/manim-video/<filename>', methods=['GET'])
     def get_manim_video(filename):
@@ -624,6 +633,8 @@ def register_routes(app):
                 'error_type': type(e).__name__
             }), 500
     
+=======
+>>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
     
     @app.route('/api/manim-code/<filename>', methods=['GET'])
     def get_manim_code(filename):
@@ -644,11 +655,10 @@ def register_routes(app):
         return jsonify({'error': 'Narration script not found'}), 404
     
     
-    @app.route('/api/elevenlabs-audio/<filename>', methods=['GET'])
-    def get_elevenlabs_audio(filename):
-        """Serve ElevenLabs audio files."""
-        from settings import settings
-        audio_path = Path(settings.AUDIO_DIR) / filename
-        if audio_path.exists():
-            return send_file(audio_path, mimetype='audio/mpeg')
-        return jsonify({'error': 'Audio not found'}), 404
+    @app.route('/api/final-video/<filename>', methods=['GET'])
+    def get_final_video(filename):
+        """Serve final combined video files (video + audio)."""
+        final_video_path = manim_service.get_final_video_path(filename)
+        if final_video_path.exists():
+            return send_file(final_video_path, mimetype='video/mp4')
+        return jsonify({'error': 'Final video not found'}), 404
