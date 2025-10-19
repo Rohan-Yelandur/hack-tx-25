@@ -14,6 +14,9 @@ function VideoGenerator() {
   const [showContent, setShowContent] = useState(false);
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfPreview, setPdfPreview] = useState(null);
+  const [videoId, setVideoId] = useState('');
+  const [sharedToCommunity, setSharedToCommunity] = useState(false);
+  const [sharingLoading, setSharingLoading] = useState(false);
 
   const videoRef = useRef(null);
   const audioRef = useRef(null);
@@ -90,6 +93,37 @@ function VideoGenerator() {
     }
   };
 
+  const handleShareToCommunity = async () => {
+    if (!videoId) {
+      setError('No video to share');
+      return;
+    }
+
+    setSharingLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/videos/${videoId}/share-to-community`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSharedToCommunity(true);
+      } else {
+        setError(data.error || 'Failed to share video');
+      }
+    } catch (err) {
+      setError('Failed to connect to server: ' + err.message);
+    } finally {
+      setSharingLoading(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!prompt.trim()) {
       setError('Please enter a prompt');
@@ -103,6 +137,8 @@ function VideoGenerator() {
     setNarrationScript('');
     setAudioUrl('');
     setShowContent(false);
+    setVideoId('');
+    setSharedToCommunity(false);
 
     try {
       const formData = new FormData();
@@ -125,7 +161,8 @@ function VideoGenerator() {
           setVideoUrl(`${API_BASE_URL}${data.video_url}`);
           setManimCode(data.manim_code || '');
           setNarrationScript(data.script_text || '');
-          setAudioUrl(data.audio_url ? `${API_BASE_URL}${data.audio_url}` : '');
+          setAudioUrl(`${API_BASE_URL}${data.audio_url}`);
+          setVideoId(data.video_id || '');
           setShowContent(true);
           
           // Log warnings if audio failed
@@ -266,6 +303,26 @@ function VideoGenerator() {
       {showContent && (
         <div className="video-section">
           <h2 className="section-title">Your Animation</h2>
+
+          {/* Share to Community Button */}
+          {videoId && (
+            <div className="share-section">
+              {!sharedToCommunity ? (
+                <button
+                  onClick={handleShareToCommunity}
+                  disabled={sharingLoading}
+                  className="share-btn"
+                >
+                  {sharingLoading ? 'Sharing...' : '✨ Share to Community'}
+                </button>
+              ) : (
+                <div className="shared-message">
+                  ✓ Shared to Community Gallery!
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="video-container">
             <video
               ref={videoRef}
