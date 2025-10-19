@@ -1,6 +1,7 @@
 # hack-tx-25
 
 AI-powered Manim video generator with a React frontend and Flask backend.
+Devpost: https://devpost.com/software/visiomath-a18ef4
 
 
 ## Setup Instructions
