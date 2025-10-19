@@ -1,22 +1,29 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../config/constants';
+import { useLessonContext } from '../context/LessonContext';
 import './VideoGenerator.css';
 
 function VideoGenerator() {
-  const [prompt, setPrompt] = useState('');
-  const [loading, setLoading] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
+  const { currentLesson, updateLesson, clearLesson } = useLessonContext();
+  
+  const [prompt, setPrompt] = useState(currentLesson.prompt || '');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [manimCode, setManimCode] = useState('');
-  const [narrationScript, setNarrationScript] = useState('');
-  const [showContent, setShowContent] = useState(false);
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfPreview, setPdfPreview] = useState(null);
+  const [sharingLoading, setSharingLoading] = useState(false);
 
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
+
+  // Initialize from context when component mounts
+  useEffect(() => {
+    if (currentLesson.hasContent) {
+      setPrompt(currentLesson.prompt);
+    }
+  }, [currentLesson.hasContent, currentLesson.prompt]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -50,6 +57,48 @@ function VideoGenerator() {
     }
   };
 
+  const handleShareToCommunity = async () => {
+    if (!currentLesson.videoId) {
+      setError('No video to share');
+      return;
+    }
+
+    setSharingLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/videos/${currentLesson.videoId}/share-to-community`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        updateLesson({ sharedToCommunity: true });
+      } else {
+        setError(data.error || 'Failed to share video');
+      }
+    } catch (err) {
+      setError('Failed to connect to server: ' + err.message);
+    } finally {
+      setSharingLoading(false);
+    }
+  };
+
+  const handleNewLesson = () => {
+    clearLesson();
+    setPrompt('');
+    setError('');
+    setPdfFile(null);
+    setPdfPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleGenerate = async () => {
     if (!prompt.trim()) {
       setError('Please enter a prompt');
@@ -58,10 +107,6 @@ function VideoGenerator() {
 
     setLoading(true);
     setError('');
-    setVideoUrl('');
-    setManimCode('');
-    setNarrationScript('');
-    setShowContent(false);
 
     try {
       const formData = new FormData();
@@ -81,10 +126,14 @@ function VideoGenerator() {
       if (data.success) {
         // Use the final combined video with embedded audio
         if (data.final_video_url) {
-          setVideoUrl(`${API_BASE_URL}${data.final_video_url}`);
-          setManimCode(data.manim_code || '');
-          setNarrationScript(data.script_text || '');
-          setShowContent(true);
+          // Update the lesson context with new data
+          updateLesson({
+            prompt: prompt,
+            videoUrl: `${API_BASE_URL}${data.final_video_url}`,
+            narrationScript: data.script_text || '',
+            videoId: data.video_id || '',
+            sharedToCommunity: false,
+          });
         } else {
           setError(data.video_error || data.audio_error || 'Failed to generate video');
         }
@@ -216,37 +265,63 @@ function VideoGenerator() {
       )}
 
       {/* Video Section */}
-      {showContent && (
+      {currentLesson.hasContent && (
         <div className="video-section">
-          <h2 className="section-title">Your Animation</h2>
+          <div className="section-header">
+            <h2 className="section-title">Your Animation</h2>
+            <button
+              onClick={handleNewLesson}
+              className="new-lesson-btn celestial-btn"
+              title="Start a new lesson"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              New Lesson
+            </button>
+          </div>
+
+          {/* Share to Community Button */}
+          {currentLesson.videoId && (
+            <div className="share-section">
+              {!currentLesson.sharedToCommunity ? (
+                <button
+                  onClick={handleShareToCommunity}
+                  disabled={sharingLoading}
+                  className="share-btn"
+                >
+                  {sharingLoading ? 'Sharing...' : '✨ Share to Community'}
+                </button>
+              ) : (
+                <div className="shared-message">
+                  ✓ Shared to Community Gallery!
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="video-container">
             <video
               ref={videoRef}
               controls
-              key={videoUrl}
+              key={currentLesson.videoUrl}
               className="video-player"
             >
-              <source src={videoUrl} type="video/mp4" />
+              <source src={currentLesson.videoUrl} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>
 
           {/* Narration Script Display */}
-          {narrationScript && (
+          {currentLesson.narrationScript && (
             <div className="audio-section">
               <h3 className="section-subtitle">AI Narration Script</h3>
               <div className="narration-script">
-                <p className="script-text">{narrationScript}</p>
+                <p className="script-text">{currentLesson.narrationScript}</p>
               </div>
             </div>
           )}
-
-          {/* {manimCode && (
-            <details className="code-section">
-              <summary className="code-summary">View Generated Code</summary>
-              <pre className="code-block">{manimCode}</pre>
-            </details>
-          )} */}
         </div>
       )}
     </div>

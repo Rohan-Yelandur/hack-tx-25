@@ -322,12 +322,65 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .new-lesson-btn {
+    justify-content: center;
+  }
+}
+
 .section-title {
   font-size: 2rem;
   color: #e8e9ed;
-  text-align: center;
-  margin: 0 0 2rem;
+  text-align: left;
+  margin: 0;
   letter-spacing: 0.05em;
+  flex: 1;
+}
+
+.new-lesson-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #e8e9ed;
+  background: linear-gradient(135deg, rgba(139, 127, 216, 0.2), rgba(77, 212, 232, 0.2));
+  border: 1px solid rgba(139, 127, 216, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.new-lesson-btn:hover {
+  background: linear-gradient(135deg, rgba(139, 127, 216, 0.3), rgba(77, 212, 232, 0.3));
+  border-color: rgba(139, 127, 216, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 127, 216, 0.3);
+}
+
+.new-lesson-btn:active {
+  transform: translateY(0);
+}
+
+.new-lesson-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .video-container {
@@ -471,4 +524,43 @@
     width: 18px;
     height: 18px;
   }
+}
+
+/* Share to Community Section */
+.share-section {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.share-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.share-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+}
+
+.share-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.shared-message {
+  background: rgba(72, 187, 120, 0.15);
+  color: #48bb78;
+  padding: 1rem 2rem;
+  border-radius: 10px;
+  font-weight: 600;
+  display: inline-block;
+  border: 1px solid rgba(72, 187, 120, 0.3);
 }

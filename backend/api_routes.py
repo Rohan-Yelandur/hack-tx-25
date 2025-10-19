@@ -7,11 +7,34 @@ import threading
 import os
 import re
 from werkzeug.utils import secure_filename
+import json
 
 
 def register_routes(app):
     """Register all API routes with the Flask app."""
-    
+
+    COMMUNITY_FILE = Path('community_videos.json')
+
+    def load_community_videos():
+        """Load the list of community video IDs from JSON file."""
+        if not COMMUNITY_FILE.exists():
+            return []
+        try:
+            with open(COMMUNITY_FILE, 'r') as f:
+                return json.load(f)
+        except:
+            return []
+
+    def save_community_videos(video_ids):
+        """Save the list of community video IDs to JSON file."""
+        try:
+            with open(COMMUNITY_FILE, 'w') as f:
+                json.dump(video_ids, f, indent=2)
+            return True
+        except Exception as e:
+            print(f"Error saving community videos: {e}")
+            return False
+
     @app.route('/api/generate-video', methods=['POST'])
     def generate_video():
         """Generate a Manim video with synchronized narration.
@@ -162,11 +185,18 @@ def register_routes(app):
                 )
                 
                 if final_video_path:
-                    response['final_video_url'] = f'/api/final-video/{Path(final_video_path).name}'
+                    final_video_filename = Path(final_video_path).name
+                    response['final_video_url'] = f'/api/final-video/{final_video_filename}'
                     response['script_url'] = f'/api/elevenlabs-script/{Path(audio_result["script_path"]).name}'
                     response['manim_code_url'] = f'/api/manim-code/{Path(video_result["manim_code_path"]).name}'
                     response['manim_code'] = video_result['manim_code']
-                    print(f"[API] Final video created: {Path(final_video_path).name}")
+                    
+                    # Extract video ID from filename (e.g., "20251018_195826.mp4" -> "20251018_195826")
+                    video_id_match = re.match(r'(\d{8}_\d{6})\.mp4', final_video_filename)
+                    if video_id_match:
+                        response['video_id'] = video_id_match.group(1)
+                    
+                    print(f"[API] Final video created: {final_video_filename}")
                 else:
                     print("[API] Warning: Failed to combine video and audio")
                     response['combine_error'] = 'Failed to combine video and audio'
@@ -244,12 +274,13 @@ def register_routes(app):
             }), 500
     
 
+
     @app.route('/api/videos', methods=['GET'])
     def get_all_videos():
-        """Get a list of all generated videos with their associated files.
+        """Get a list of community videos with their associated files.
 
-        This endpoint scans the filesystem for final combined videos and matches them
-        with their corresponding script and code files.
+        This endpoint scans the filesystem for videos marked as community
+        and matches them with their corresponding audio, script, and code files.
 
         Note: This is a file-based implementation. Can be easily replaced with
         a database query in the future without changing the API response format.
@@ -257,7 +288,11 @@ def register_routes(app):
         try:
             from settings import settings
 
-            print("[API-Videos] Fetching all generated videos...")
+            print("[API-Videos] Fetching community videos...")
+
+            # Load community video IDs
+            community_video_ids = load_community_videos()
+            print(f"[API-Videos] Found {len(community_video_ids)} community videos")
 
             # Get all final video files (combined video + audio)
             final_videos_dir = Path(settings.FINAL_VIDEOS_DIR)
@@ -265,6 +300,18 @@ def register_routes(app):
                 return jsonify({'success': True, 'videos': []})
 
             video_files = sorted(final_videos_dir.glob('*.mp4'), key=os.path.getmtime, reverse=True)
+
+            # Get all audio and script files upfront
+            audio_dir = Path(settings.AUDIO_DIR)
+            script_dir = Path(settings.SCRIPTS_DIR)
+            code_dir = Path(settings.CODE_DIR)
+
+            all_audio_files = {af: af.stat().st_mtime for af in audio_dir.glob('audio_*.mp3')}
+            all_script_files = {sf: sf.stat().st_mtime for sf in script_dir.glob('script_*.txt')}
+
+            # Track which files have been matched to avoid duplicates
+            matched_audio = set()
+            matched_scripts = set()
 
             videos = []
             for video_path in video_files:
@@ -277,22 +324,64 @@ def register_routes(app):
 
                 timestamp = timestamp_match.group(1)
 
+                # Only include videos marked as community
+                if timestamp not in community_video_ids:
+                    continue
+                video_mtime = video_path.stat().st_mtime
+
+                # Try to find matching audio file
+                # First try exact timestamp match
+                exact_audio = audio_dir / f'audio_{timestamp}.mp3'
+                audio_path = None
+
+                if exact_audio.exists() and exact_audio not in matched_audio:
+                    audio_path = exact_audio
+                    matched_audio.add(exact_audio)
+                else:
+                    # Find closest unmatched audio file by modification time
+                    unmatched_audio = {af: mtime for af, mtime in all_audio_files.items()
+                                      if af not in matched_audio}
+                    if unmatched_audio:
+                        closest_audio = min(
+                            unmatched_audio.keys(),
+                            key=lambda af: abs(unmatched_audio[af] - video_mtime)
+                        )
+                        # Only use if within 2 minutes (120 seconds)
+                        if abs(unmatched_audio[closest_audio] - video_mtime) < 120:
+                            audio_path = closest_audio
+                            matched_audio.add(closest_audio)
+
                 # Try to find matching script file
-                script_dir = Path(settings.SCRIPTS_DIR)
-                script_files = list(script_dir.glob(f'script_*.txt'))
+                # First try exact timestamp match
+                exact_script = script_dir / f'script_{timestamp}.txt'
                 script_path = None
                 script_text = None
-                for sf in script_files:
-                    if timestamp in sf.name or abs(sf.stat().st_mtime - video_path.stat().st_mtime) < 60:
-                        script_path = sf
-                        try:
-                            script_text = script_path.read_text(encoding='utf-8')
-                        except:
-                            script_text = None
-                        break
+
+                if exact_script.exists() and exact_script not in matched_scripts:
+                    script_path = exact_script
+                    matched_scripts.add(exact_script)
+                else:
+                    # Find closest unmatched script file by modification time
+                    unmatched_scripts = {sf: mtime for sf, mtime in all_script_files.items()
+                                        if sf not in matched_scripts}
+                    if unmatched_scripts:
+                        closest_script = min(
+                            unmatched_scripts.keys(),
+                            key=lambda sf: abs(unmatched_scripts[sf] - video_mtime)
+                        )
+                        # Only use if within 2 minutes (120 seconds)
+                        if abs(unmatched_scripts[closest_script] - video_mtime) < 120:
+                            script_path = closest_script
+                            matched_scripts.add(closest_script)
+
+                # Read script text if found
+                if script_path:
+                    try:
+                        script_text = script_path.read_text(encoding='utf-8')
+                    except:
+                        script_text = None
 
                 # Try to find matching code file
-                code_dir = Path(settings.CODE_DIR)
                 code_files = list(code_dir.glob(f'{timestamp}.py'))
                 code_path = code_files[0] if code_files else None
 
@@ -328,6 +417,103 @@ def register_routes(app):
             return jsonify({
                 'error': error_msg,
                 'error_type': type(e).__name__
+            }), 500
+
+
+    @app.route('/api/videos/<video_id>/share-to-community', methods=['POST'])
+    def share_to_community(video_id):
+        """Mark a video as shared to the community."""
+        try:
+            from settings import settings
+
+            # Verify the video exists in final_videos
+            final_videos_dir = Path(settings.FINAL_VIDEOS_DIR)
+            video_path = final_videos_dir / f'{video_id}.mp4'
+
+            if not video_path.exists():
+                return jsonify({
+                    'error': 'Video not found',
+                    'success': False
+                }), 404
+
+            # Load current community videos
+            community_videos = load_community_videos()
+
+            # Check if already shared
+            if video_id in community_videos:
+                return jsonify({
+                    'success': True,
+                    'message': 'Video already shared to community',
+                    'video_id': video_id
+                })
+
+            # Add to community
+            community_videos.append(video_id)
+
+            if save_community_videos(community_videos):
+                print(f"[API-Community] Video {video_id} shared to community")
+                return jsonify({
+                    'success': True,
+                    'message': 'Video shared to community',
+                    'video_id': video_id
+                })
+            else:
+                return jsonify({
+                    'error': 'Failed to save community data',
+                    'success': False
+                }), 500
+
+        except Exception as e:
+            error_msg = f"{type(e).__name__}: {str(e)}"
+            print(f"[API-Community ERROR] {error_msg}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                'error': error_msg,
+                'error_type': type(e).__name__,
+                'success': False
+            }), 500
+
+
+    @app.route('/api/videos/<video_id>/remove-from-community', methods=['POST'])
+    def remove_from_community(video_id):
+        """Remove a video from the community."""
+        try:
+            # Load current community videos
+            community_videos = load_community_videos()
+
+            # Check if video is in community
+            if video_id not in community_videos:
+                return jsonify({
+                    'success': True,
+                    'message': 'Video not in community'
+                })
+
+            # Remove from community
+            community_videos.remove(video_id)
+
+            if save_community_videos(community_videos):
+                print(f"[API-Community] Video {video_id} removed from community")
+                return jsonify({
+                    'success': True,
+                    'message': 'Video removed from community',
+                    'video_id': video_id
+                })
+            else:
+                return jsonify({
+                    'error': 'Failed to save community data',
+                    'success': False
+                }), 500
+
+        except Exception as e:
+            error_msg = f"{type(e).__name__}: {str(e)}"
+            print(f"[API-Community ERROR] {error_msg}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                'error': error_msg,
+                'error_type': type(e).__name__,
+                'success': False
             }), 500
 
 
