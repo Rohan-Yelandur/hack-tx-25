@@ -6,7 +6,6 @@ function Community() {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [expandedCode, setExpandedCode] = useState({});
   const videoRefs = useRef({});
 
   useEffect(() => {
@@ -32,13 +31,6 @@ function Community() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const toggleCode = (videoId) => {
-    setExpandedCode(prev => ({
-      ...prev,
-      [videoId]: !prev[videoId]
-    }));
   };
 
   const formatDate = (timestamp) => {
@@ -95,42 +87,11 @@ function Community() {
             </div>
 
             <div className="video-info">
-              {video.script_text && (
-                <div className="script-preview">
-                  <h3>Narration</h3>
-                  <p>{video.script_text}</p>
-                </div>
-              )}
-
               <div className="video-meta">
                 <span className="timestamp">
                   {formatDate(video.created_at)}
                 </span>
               </div>
-
-              {video.manim_code_url && (
-                <div className="code-section">
-                  <button
-                    onClick={() => toggleCode(video.id)}
-                    className="toggle-code-button"
-                  >
-                    {expandedCode[video.id] ? 'Hide Code' : 'View Code'}
-                  </button>
-
-                  {expandedCode[video.id] && (
-                    <div className="code-container">
-                      <a
-                        href={`${API_BASE_URL}${video.manim_code_url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="view-code-link"
-                      >
-                        Open Code File →
-                      </a>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         ))}

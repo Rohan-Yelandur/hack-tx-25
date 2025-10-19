@@ -5,10 +5,9 @@ import { useLessonContext } from '../context/LessonContext';
 import './VideoGenerator.css';
 
 function VideoGenerator() {
-  const { currentLesson, updateLesson, clearLesson } = useLessonContext();
+  const { currentLesson, updateLesson, clearLesson, setLoading: setContextLoading } = useLessonContext();
   
   const [prompt, setPrompt] = useState(currentLesson.prompt || '');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfPreview, setPdfPreview] = useState(null);
@@ -17,6 +16,9 @@ function VideoGenerator() {
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
+
+  // Get loading state from context
+  const loading = currentLesson.loading;
 
   // Initialize from context when component mounts
   useEffect(() => {
@@ -105,7 +107,7 @@ function VideoGenerator() {
       return;
     }
 
-    setLoading(true);
+    setContextLoading(true);
     setError('');
 
     try {
@@ -133,6 +135,7 @@ function VideoGenerator() {
             narrationScript: data.script_text || '',
             videoId: data.video_id || '',
             sharedToCommunity: false,
+            loading: false,
           });
         } else {
           setError(data.video_error || data.audio_error || 'Failed to generate video');
@@ -144,16 +147,22 @@ function VideoGenerator() {
       console.error('Fetch error:', err);
       setError('Failed to connect to server: ' + err.message);
     } finally {
-      setLoading(false);
+      setContextLoading(false);
     }
   };
 
   return (
     <div className="video-generator">
+      {/* Hero Section */}
+      <div className="hero-section">
+        <h1 className="hero-title">Canopus</h1>
+        <p className="hero-subtitle">We Help You Connect the Dots</p>
+      </div>
+
       {/* Input Section */}
       <div className="input-section">
         <h2 className="input-title">
-          Generate <span className="highlight-cyan">Animations</span> with AI
+          Generate <span className="highlight-cyan">Lessons</span> with AI
         </h2>
         
         <div className="input-container">
@@ -269,37 +278,44 @@ function VideoGenerator() {
         <div className="video-section">
           <div className="section-header">
             <h2 className="section-title">Your Animation</h2>
-            <button
-              onClick={handleNewLesson}
-              className="new-lesson-btn celestial-btn"
-              title="Start a new lesson"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              New Lesson
-            </button>
-          </div>
-
-          {/* Share to Community Button */}
-          {currentLesson.videoId && (
-            <div className="share-section">
-              {!currentLesson.sharedToCommunity ? (
+            <div className="header-buttons">
+              {currentLesson.videoId && !currentLesson.sharedToCommunity && (
                 <button
                   onClick={handleShareToCommunity}
                   disabled={sharingLoading}
-                  className="share-btn"
+                  className="share-btn celestial-btn"
+                  title="Share to Community"
                 >
-                  {sharingLoading ? 'Sharing...' : '✨ Share to Community'}
+                  {sharingLoading ? (
+                    <div className="btn-spinner"></div>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+                    </svg>
+                  )}
                 </button>
-              ) : (
-                <div className="shared-message">
-                  ✓ Shared to Community Gallery!
+              )}
+              {currentLesson.videoId && currentLesson.sharedToCommunity && (
+                <div className="shared-indicator" title="Shared to Community">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
                 </div>
               )}
+              <button
+                onClick={handleNewLesson}
+                className="new-lesson-btn celestial-btn"
+                title="Start a new lesson"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+              </button>
             </div>
-          )}
+          </div>
 
           <div className="video-container">
             <video
@@ -312,16 +328,6 @@ function VideoGenerator() {
               Your browser does not support the video tag.
             </video>
           </div>
-
-          {/* Narration Script Display */}
-          {currentLesson.narrationScript && (
-            <div className="audio-section">
-              <h3 className="section-subtitle">AI Narration Script</h3>
-              <div className="narration-script">
-                <p className="script-text">{currentLesson.narrationScript}</p>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>

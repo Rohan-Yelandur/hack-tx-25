@@ -18,6 +18,7 @@ export const LessonProvider = ({ children }) => {
     videoId: '',
     sharedToCommunity: false,
     hasContent: false,
+    loading: false,
   });
 
   const updateLesson = (lessonData) => {
@@ -36,11 +37,19 @@ export const LessonProvider = ({ children }) => {
       videoId: '',
       sharedToCommunity: false,
       hasContent: false,
+      loading: false,
     });
   };
 
+  const setLoading = (isLoading) => {
+    setCurrentLesson(prev => ({
+      ...prev,
+      loading: isLoading,
+    }));
+  };
+
   return (
-    <LessonContext.Provider value={{ currentLesson, updateLesson, clearLesson }}>
+    <LessonContext.Provider value={{ currentLesson, updateLesson, clearLesson, setLoading }}>
       {children}
     </LessonContext.Provider>
   );
