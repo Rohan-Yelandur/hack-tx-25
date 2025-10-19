@@ -4,6 +4,8 @@ from gemini_service import gemini_service
 from elevenlabs_service import eleven_labs_service
 from manim_service import manim_service
 import threading
+import os
+import re
 
 
 def register_routes(app):
@@ -197,9 +199,108 @@ def register_routes(app):
                 'error_type': type(e).__name__
             }), 500
     
-    
+
+    @app.route('/api/videos', methods=['GET'])
+    def get_all_videos():
+        """Get a list of all generated videos with their associated files.
+
+        This endpoint scans the filesystem for generated videos and matches them
+        with their corresponding audio, script, and code files.
+
+        Note: This is a file-based implementation. Can be easily replaced with
+        a database query in the future without changing the API response format.
+        """
+        try:
+            from settings import settings
+
+            print("[API-Videos] Fetching all generated videos...")
+
+            # Get all video files
+            video_dir = Path(settings.OUTPUT_DIR)
+            if not video_dir.exists():
+                return jsonify({'success': True, 'videos': []})
+
+            video_files = sorted(video_dir.glob('*.mp4'), key=os.path.getmtime, reverse=True)
+
+            videos = []
+            for video_path in video_files:
+                # Extract timestamp from filename (e.g., "20251018_195826.mp4")
+                video_filename = video_path.name
+                timestamp_match = re.match(r'(\d{8}_\d{6})\.mp4', video_filename)
+
+                if not timestamp_match:
+                    continue
+
+                timestamp = timestamp_match.group(1)
+
+                # Try to find matching audio file
+                audio_dir = Path(settings.AUDIO_DIR)
+                audio_files = list(audio_dir.glob(f'audio_*.mp3'))
+                audio_path = None
+                for af in audio_files:
+                    if timestamp in af.name or af.stat().st_mtime - video_path.stat().st_mtime < 60:
+                        audio_path = af
+                        break
+
+                # Try to find matching script file
+                script_dir = Path(settings.SCRIPTS_DIR)
+                script_files = list(script_dir.glob(f'script_*.txt'))
+                script_path = None
+                script_text = None
+                for sf in script_files:
+                    if timestamp in sf.name or sf.stat().st_mtime - video_path.stat().st_mtime < 60:
+                        script_path = sf
+                        try:
+                            script_text = script_path.read_text(encoding='utf-8')
+                        except:
+                            script_text = None
+                        break
+
+                # Try to find matching code file
+                code_dir = Path(settings.CODE_DIR)
+                code_files = list(code_dir.glob(f'{timestamp}.py'))
+                code_path = code_files[0] if code_files else None
+
+                # Build video entry
+                video_entry = {
+                    'id': timestamp,
+                    'video_url': f'/api/manim-video/{video_filename}',
+                    'created_at': os.path.getmtime(video_path)
+                }
+
+                if audio_path:
+                    video_entry['audio_url'] = f'/api/elevenlabs-audio/{audio_path.name}'
+
+                if script_path:
+                    video_entry['script_url'] = f'/api/elevenlabs-script/{script_path.name}'
+                    if script_text:
+                        video_entry['script_text'] = script_text
+
+                if code_path:
+                    video_entry['manim_code_url'] = f'/api/manim-code/{code_path.name}'
+
+                videos.append(video_entry)
+
+            print(f"[API-Videos] Found {len(videos)} videos")
+
+            return jsonify({
+                'success': True,
+                'videos': videos
+            })
+
+        except Exception as e:
+            error_msg = f"{type(e).__name__}: {str(e)}"
+            print(f"[API-Videos ERROR] {error_msg}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                'error': error_msg,
+                'error_type': type(e).__name__
+            }), 500
+
+
     # ==================== Resource Endpoints ====================
-    
+
     @app.route('/api/manim-video/<filename>', methods=['GET'])
     def get_manim_video(filename):
         """Serve Manim video files."""

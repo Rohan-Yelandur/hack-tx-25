@@ -1,7 +1,7 @@
 .video-generator {
   max-width: 900px;
   margin: 0 auto;
-  padding: 2rem 2rem 4rem;
+  padding: 120px 2rem 4rem;
   position: relative;
   z-index: 10;
 }
@@ -295,7 +295,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .video-generator {
-    padding: 0 1rem 4rem;
+    padding: 120px 1rem 4rem;
   }
 
   .hero-section {
