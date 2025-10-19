@@ -5,12 +5,14 @@ import VideoGenerator from './pages/VideoGenerator';
 import Community from './pages/Community';
 import Starfield from './components/Starfield';
 import CelestialDecorations from './components/CelestialDecorations';
+import ConstellationBackground from './components/ConstellationBackground';
 
 function App() {
   return (
     <Router>
       <div className="App">
         <Starfield />
+        <ConstellationBackground />
         <CelestialDecorations />
         <Header />
         <main className="App-main">

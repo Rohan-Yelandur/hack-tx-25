@@ -32,6 +32,7 @@ class Settings:
     CODE_DIR = "manim_code"
     SCRIPTS_DIR = "elevenlabs_scripts"
     AUDIO_DIR = "elevenlabs_audio"
+    FINAL_VIDEOS_DIR = "final_videos"
     
     # Server Configuration
     PORT = 5000

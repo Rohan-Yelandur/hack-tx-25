@@ -10,53 +10,13 @@ function VideoGenerator() {
   const [error, setError] = useState('');
   const [manimCode, setManimCode] = useState('');
   const [narrationScript, setNarrationScript] = useState('');
-  const [audioUrl, setAudioUrl] = useState('');
   const [showContent, setShowContent] = useState(false);
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfPreview, setPdfPreview] = useState(null);
 
   const videoRef = useRef(null);
-  const audioRef = useRef(null);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
-
-  // Synchronize audio with video playback
-  useEffect(() => {
-    const video = videoRef.current;
-    const audio = audioRef.current;
-
-    // Skip sync if no audio URL or refs are missing
-    if (!video || !audio || !audioUrl) return;
-
-    const syncPlay = () => {
-      if (audioUrl) {
-        audio.currentTime = video.currentTime;
-        audio.play().catch(err => console.log('Audio play failed:', err));
-      }
-    };
-
-    const syncPause = () => {
-      if (audioUrl) {
-        audio.pause();
-      }
-    };
-
-    const syncSeeking = () => {
-      if (audioUrl) {
-        audio.currentTime = video.currentTime;
-      }
-    };
-
-    video.addEventListener('play', syncPlay);
-    video.addEventListener('pause', syncPause);
-    video.addEventListener('seeking', syncSeeking);
-
-    return () => {
-      video.removeEventListener('play', syncPlay);
-      video.removeEventListener('pause', syncPause);
-      video.removeEventListener('seeking', syncSeeking);
-    };
-  }, [showContent, audioUrl]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -101,7 +61,6 @@ function VideoGenerator() {
     setVideoUrl('');
     setManimCode('');
     setNarrationScript('');
-    setAudioUrl('');
     setShowContent(false);
 
     try {
@@ -120,20 +79,14 @@ function VideoGenerator() {
       console.log('API Response:', data); // Debug log
 
       if (data.success) {
-        // Show content even if only video is ready (audio is optional)
-        if (data.video_url) {
-          setVideoUrl(`${API_BASE_URL}${data.video_url}`);
+        // Use the final combined video with embedded audio
+        if (data.final_video_url) {
+          setVideoUrl(`${API_BASE_URL}${data.final_video_url}`);
           setManimCode(data.manim_code || '');
           setNarrationScript(data.script_text || '');
-          setAudioUrl(data.audio_url ? `${API_BASE_URL}${data.audio_url}` : '');
           setShowContent(true);
-          
-          // Log warnings if audio failed
-          if (!data.audio_url && data.audio_error) {
-            console.warn('Audio generation failed:', data.audio_error);
-          }
         } else {
-          setError(data.video_error || 'Failed to generate video');
+          setError(data.video_error || data.audio_error || 'Failed to generate video');
         }
       } else {
         setError(data.error || 'Failed to generate video');
@@ -276,16 +229,6 @@ function VideoGenerator() {
               <source src={videoUrl} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
-            {/* Hidden audio element that syncs with video - only if audio exists */}
-            {audioUrl && (
-              <audio
-                ref={audioRef}
-                style={{ display: 'none' }}
-                key={audioUrl}
-              >
-                <source src={audioUrl} type="audio/mpeg" />
-              </audio>
-            )}
           </div>
 
           {/* Narration Script Display */}
