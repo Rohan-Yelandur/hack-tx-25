@@ -640,7 +640,6 @@
   }
 }
 
-<<<<<<< HEAD
 /* Action Buttons Section */
 .action-buttons {
   display: flex;
@@ -813,9 +812,6 @@
   transform: scale(1.1);
 }
 
-=======
-/* Share to Community Button */
->>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
 .share-btn {
   width: 42px;
   height: 42px;

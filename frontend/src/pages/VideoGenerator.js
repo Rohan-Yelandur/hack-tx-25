@@ -95,19 +95,19 @@ function VideoGenerator() {
   };
 
   const handleDownload = async () => {
-    if (!videoId) {
+    if (!currentLesson.videoId) {
       setError('No video to download');
       return;
     }
 
     try {
       // Use the new download endpoint that merges video and audio
-      const downloadUrl = `${API_BASE_URL}/api/download-video/${videoId}`;
+      const downloadUrl = `${API_BASE_URL}/api/download-video/${currentLesson.videoId}`;
 
       // Create a temporary link and trigger download
       const a = document.createElement('a');
       a.href = downloadUrl;
-      a.download = `animation_${videoId}.mp4`;
+  a.download = `animation_${currentLesson.videoId}.mp4`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -165,16 +165,6 @@ function VideoGenerator() {
     }
   };
 
-  const handleNewLesson = () => {
-    clearLesson();
-    setPrompt('');
-    setError('');
-    setPdfFile(null);
-    setPdfPreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -182,20 +172,11 @@ function VideoGenerator() {
       return;
     }
 
-    setContextLoading(true);
-    setError('');
-<<<<<<< HEAD
-    setVideoUrl('');
-    setManimCode('');
-    setNarrationScript('');
-    setAudioUrl('');
-    setShowContent(false);
-    setVideoId('');
-    setSharedToCommunity(false);
-    setTags([]);
-    setTagInput('');
-=======
->>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
+  setContextLoading(true);
+  setError('');
+  // clear tags input locally
+  setTags([]);
+  setTagInput('');
 
     try {
       const formData = new FormData();
@@ -369,7 +350,6 @@ function VideoGenerator() {
       {/* Video Section */}
       {currentLesson.hasContent && (
         <div className="video-section">
-<<<<<<< HEAD
           <h2 className="section-title">Your Animation</h2>
 
           {/* Action Buttons */}
@@ -389,9 +369,9 @@ function VideoGenerator() {
             </button>
 
             {/* Share to Community Button */}
-            {videoId && (
+            {currentLesson.videoId && (
               <div className="share-section">
-                {!sharedToCommunity ? (
+                {!currentLesson.sharedToCommunity ? (
                   <div className="share-container">
                     {/* Tag Input */}
                     <div className="tag-input-section">
@@ -445,47 +425,6 @@ function VideoGenerator() {
                 )}
               </div>
             )}
-=======
-          <div className="section-header">
-            <h2 className="section-title">Your Animation</h2>
-            <div className="header-buttons">
-              {currentLesson.videoId && !currentLesson.sharedToCommunity && (
-                <button
-                  onClick={handleShareToCommunity}
-                  disabled={sharingLoading}
-                  className="share-btn celestial-btn"
-                  title="Share to Community"
-                >
-                  {sharingLoading ? (
-                    <div className="btn-spinner"></div>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
-                    </svg>
-                  )}
-                </button>
-              )}
-              {currentLesson.videoId && currentLesson.sharedToCommunity && (
-                <div className="shared-indicator" title="Shared to Community">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </div>
-              )}
-              <button
-                onClick={handleNewLesson}
-                className="new-lesson-btn celestial-btn"
-                title="Start a new lesson"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="12" y1="18" x2="12" y2="12"></line>
-                  <line x1="9" y1="15" x2="15" y2="15"></line>
-                </svg>
-              </button>
-            </div>
->>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
           </div>
 
           <div className="video-container">

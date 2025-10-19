@@ -544,7 +544,6 @@ def register_routes(app):
 
 
     # ==================== Resource Endpoints ====================
-<<<<<<< HEAD
 
     @app.route('/api/manim-video/<filename>', methods=['GET'])
     def get_manim_video(filename):
@@ -633,8 +632,6 @@ def register_routes(app):
                 'error_type': type(e).__name__
             }), 500
     
-=======
->>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
     
     @app.route('/api/manim-code/<filename>', methods=['GET'])
     def get_manim_code(filename):
