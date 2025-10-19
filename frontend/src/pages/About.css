@@ -1,0 +1,80 @@
+.about-page {
+  max-width: 900px;
+  margin: 120px auto 4rem;
+  padding: 2rem;
+  color: #e8e9ed;
+}
+
+.about-hero {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.about-title {
+  font-size: 3rem;
+  background: linear-gradient(135deg, #8b7fd8 0%, #4dd4e8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.about-hero .mission p {
+  color: #a8b2d1;
+  max-width: 800px;
+  margin: 0.75rem auto 0;
+}
+
+.about-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.about-content h2 {
+  color: #8b7fd8;
+}
+
+.founders ul, .tech ul {
+  list-style: none;
+  padding: 0;
+}
+
+.founders li, .tech li {
+  padding: 0.4rem 0;
+}
+
+.founders a {
+  color: #e8e9ed;
+  text-decoration: none;
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.founders a .icon {
+  color: #4dd4e8;
+}
+
+.tech-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.tech-icon {
+  color: #8b7fd8;
+  margin-right: 0.5rem;
+}
+
+.mission {
+  grid-column: 1 / -1;
+  background: rgba(26,31,53,0.5);
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(139,127,216,0.12);
+}
+
+@media (max-width: 768px) {
+  .about-page { margin: 80px 1rem 2rem; }
+  .about-content { grid-template-columns: 1fr; }
+}

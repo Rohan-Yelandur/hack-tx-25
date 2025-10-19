@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../config/constants';
 import { useLessonContext } from '../context/LessonContext';
 import './VideoGenerator.css';
+import ConstellationLoading from '../components/ConstellationLoading';
 
 function VideoGenerator() {
   const { currentLesson, updateLesson, clearLesson, setLoading: setContextLoading } = useLessonContext();
@@ -16,6 +17,7 @@ function VideoGenerator() {
   const [tagInput, setTagInput] = useState('');
 
   const videoRef = useRef(null);
+  const inputSectionRef = useRef(null);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -37,6 +39,37 @@ function VideoGenerator() {
       textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
     }
   }, [prompt]);
+
+  // Smooth scroll helper (duration in ms)
+  const smoothScrollTo = (targetY, duration = 600) => {
+    const startY = window.scrollY || window.pageYOffset;
+    const diff = targetY - startY;
+    let start;
+
+    const easeInOutCubic = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    const step = (timestamp) => {
+      if (!start) start = timestamp;
+      const elapsed = timestamp - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeInOutCubic(progress);
+      window.scrollTo(0, startY + diff * eased);
+      if (elapsed < duration) {
+        window.requestAnimationFrame(step);
+      }
+    };
+
+    window.requestAnimationFrame(step);
+  };
+
+  // Scroll to input section when arrow clicked (smooth animation)
+  const scrollToInput = () => {
+    if (inputSectionRef.current) {
+      const rect = inputSectionRef.current.getBoundingClientRect();
+      const targetY = rect.top + window.pageYOffset - 20; // small offset
+      smoothScrollTo(targetY, 650);
+    }
+  };
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -205,11 +238,18 @@ function VideoGenerator() {
       {/* Hero Section */}
       <div className="hero-section">
         <h1 className="hero-title">Canopus</h1>
-        <p className="hero-subtitle">We Help You Connect the Dots</p>
+        <p className="hero-subtitle">We Help You Connect the Dots</p> 
+
+        <button className="hero-down" onClick={scrollToInput} aria-label="Scroll to generator">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <polyline points="19 12 12 19 5 12"></polyline>
+          </svg>
+        </button>
       </div>
 
       {/* Input Section */}
-      <div className="input-section">
+  <div className="input-section" ref={inputSectionRef}>
         <h2 className="input-title">
           Generate <span className="highlight-cyan">Lessons</span> with AI
         </h2>
@@ -317,8 +357,7 @@ function VideoGenerator() {
       {/* Loading Message */}
       {loading && (
         <div className="message-card loading-message">
-          <div className="loading-spinner"></div>
-          <p>Generating your animation... This may take a minute.</p>
+          <ConstellationLoading />
         </div>
       )}
 

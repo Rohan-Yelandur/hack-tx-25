@@ -23,6 +23,12 @@ function Header() {
           >
             Community
           </Link>
+          <Link
+            to="/about"
+            className={`nav-link ${location.pathname === '/about' ? 'active' : ''}`}
+          >
+            About
+          </Link>
         </nav>
       </div>
     </header>
