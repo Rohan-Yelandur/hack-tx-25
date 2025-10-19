@@ -1,0 +1,77 @@
+{
+  "quiz_id": "20251019_034802",
+  "video_id": null,
+  "prompt": "explain factoring",
+  "questions": [
+    {
+      "id": 1,
+      "type": "step-by-step",
+      "question_text": "Factor the expression: x^2 + 5x + 6",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "Find two numbers that multiply to 6 and add up to 5. What are those numbers?",
+          "correct_answer": "2 and 3",
+          "hint": "Think about the factors of 6. Which pair adds up to 5?",
+          "explanation": "The numbers 2 and 3 satisfy both conditions: 2 * 3 = 6 and 2 + 3 = 5."
+        },
+        {
+          "stage_number": 2,
+          "prompt": "Rewrite the expression using the numbers you found in the previous step.",
+          "correct_answer": "(x + 2)(x + 3)",
+          "hint": "Use the numbers as constants in the factors (x + number).",
+          "explanation": "Using 2 and 3: (x + 2)(x + 3)"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "multiple-choice",
+      "question_text": "Which of the following is NOT a method of factoring?",
+      "options": [
+        "Greatest Common Factor",
+        "Difference of Squares",
+        "Sum of Cubes",
+        "Perfect Square Decimals"
+      ],
+      "correct_answer": "Perfect Square Decimals",
+      "explanation": "Greatest Common Factor, Difference of Squares, and Sum of Cubes are all valid methods of factoring. 'Perfect Square Decimals' is not a factoring method."
+    },
+    {
+      "id": 3,
+      "type": "multiple-choice",
+      "question_text": "What is the first step in factoring the expression 4x^2 + 8x?",
+      "options": [
+        "Factor out 4x",
+        "Factor out 2x",
+        "Rewrite as (2x + 2)^2",
+        "Divide by 4"
+      ],
+      "correct_answer": "Factor out 4x",
+      "explanation": "The first step is to identify and factor out the greatest common factor (GCF), which is 4x in this case."
+    },
+    {
+      "id": 4,
+      "type": "fill-in-blank",
+      "question_text": "Factoring is the process of breaking down an expression into its _____.",
+      "correct_answers": [
+        "factors",
+        "components",
+        "parts"
+      ],
+      "case_sensitive": false,
+      "explanation": "Factoring is essentially reversing the process of multiplying to find the building blocks (factors) of an expression."
+    },
+    {
+      "id": 5,
+      "type": "fill-in-blank",
+      "question_text": "The difference of squares pattern can be factored into the form (a + b)(a - _____).",
+      "correct_answers": [
+        "b"
+      ],
+      "case_sensitive": false,
+      "explanation": "The difference of squares pattern, a^2 - b^2, factors into (a + b)(a - b)."
+    }
+  ],
+  "created_at": "20251019_034802"
+}

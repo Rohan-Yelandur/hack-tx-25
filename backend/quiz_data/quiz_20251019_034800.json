@@ -1,0 +1,95 @@
+{
+  "quiz_id": "20251019_034800",
+  "video_id": null,
+  "prompt": "explain factoring",
+  "questions": [
+    {
+      "id": 1,
+      "type": "step-by-step",
+      "question_text": "Factor the quadratic expression: x\u00b2 + 5x + 6",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "Find two numbers that multiply to 6 and add up to 5. What are those numbers?",
+          "correct_answer": "2 and 3",
+          "hint": "Think about the factors of 6 and which pair sums to 5.",
+          "explanation": "The factors of 6 are 1 & 6, and 2 & 3. Only 2 + 3 = 5."
+        },
+        {
+          "stage_number": 2,
+          "prompt": "Rewrite the expression using those numbers to create two binomials. What is the factored expression?",
+          "correct_answer": "(x + 2)(x + 3)",
+          "hint": "The two numbers you found will be the constants in each binomial.",
+          "explanation": "Because 2 and 3 add to 5 and multiply to 6, (x + 2)(x + 3) is the factored form."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "multiple-choice",
+      "question_text": "What is the greatest common factor (GCF) of the expression 12x\u00b3 + 18x\u00b2?",
+      "options": [
+        "6x",
+        "6x\u00b2",
+        "12x\u00b2",
+        "18x\u00b3"
+      ],
+      "correct_answer": "6x\u00b2",
+      "explanation": "The GCF is the largest factor that divides both terms.  6 divides both 12 and 18, and x\u00b2 is the highest power of x that divides both x\u00b3 and x\u00b2."
+    },
+    {
+      "id": 3,
+      "type": "multiple-choice",
+      "question_text": "Which of the following is a difference of squares?",
+      "options": [
+        "x\u00b2 + 4",
+        "x\u00b2 - 4",
+        "x\u00b2 - 4x + 4",
+        "x\u00b2 + 4x + 4"
+      ],
+      "correct_answer": "x\u00b2 - 4",
+      "explanation": "A difference of squares is an expression in the form a\u00b2 - b\u00b2.  x\u00b2 - 4 fits this form (x\u00b2 - 2\u00b2)."
+    },
+    {
+      "id": 4,
+      "type": "fill-in-blank",
+      "question_text": "Factoring is the _____ of expanding.",
+      "correct_answers": [
+        "inverse",
+        "opposite",
+        "reverse"
+      ],
+      "case_sensitive": false,
+      "explanation": "Factoring 'undoes' the process of expanding expressions using the distributive property or other techniques. "
+    },
+    {
+      "id": 5,
+      "type": "step-by-step",
+      "question_text": "Factor by grouping: x\u00b3 + 3x\u00b2 + 2x + 6",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "Group the first two terms and the last two terms. What expression do you now have?",
+          "correct_answer": "(x\u00b3 + 3x\u00b2) + (2x + 6)",
+          "hint": "Simply group the terms using parenthesis.",
+          "explanation": "Grouping the terms is the first step."
+        },
+        {
+          "stage_number": 2,
+          "prompt": "Factor out the greatest common factor from each group. What is the result?",
+          "correct_answer": "x\u00b2(x + 3) + 2(x + 3)",
+          "hint": "What can you factor out from x\u00b3 + 3x\u00b2?",
+          "explanation": "The GCF of x\u00b3 and 3x\u00b2 is x\u00b2.  The GCF of 2x and 6 is 2."
+        },
+        {
+          "stage_number": 3,
+          "prompt": "Now, factor out the common binomial factor. What is the fully factored expression?",
+          "correct_answer": "(x\u00b2 + 2)(x + 3)",
+          "hint": "Notice the (x+3) is in both remaining terms.",
+          "explanation": "(x + 3) is a common factor of both terms, so we factor it out, leaving (x\u00b2 + 2)(x + 3)."
+        }
+      ]
+    }
+  ],
+  "created_at": "20251019_034800"
+}

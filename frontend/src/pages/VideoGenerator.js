@@ -2,11 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../config/constants';
 import { useLessonContext } from '../context/LessonContext';
+import QuizContainer from '../components/Quiz/QuizContainer';
+import ConstellationLoading from '../components/ConstellationLoading';
 import './VideoGenerator.css';
 
 function VideoGenerator({ showSplash }) {
-  const { currentLesson, updateLesson, clearLesson, setLoading: setContextLoading } = useLessonContext();
-  
+  const { currentLesson, updateLesson, clearLesson } = useLessonContext();
+
   const [prompt, setPrompt] = useState(currentLesson.prompt || '');
   const [error, setError] = useState('');
   const [pdfFile, setPdfFile] = useState(null);
@@ -15,12 +17,16 @@ function VideoGenerator({ showSplash }) {
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
 
+  // Separate loading and data states for video and quiz
+  const [videoLoading, setVideoLoading] = useState(false);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [videoData, setVideoData] = useState(null);
+  const [quizData, setQuizData] = useState(null);
+  const [quizId, setQuizId] = useState(null);
+
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
-
-  // Get loading state from context
-  const loading = currentLesson.loading;
 
   // Initialize from context when component mounts
   useEffect(() => {
@@ -62,19 +68,20 @@ function VideoGenerator({ showSplash }) {
   };
 
   const handleDownload = async () => {
-    if (!currentLesson.videoId) {
+    const videoId = videoData?.videoId || currentLesson.videoId;
+    if (!videoId) {
       setError('No video to download');
       return;
     }
 
     try {
       // Use the new download endpoint that merges video and audio
-      const downloadUrl = `${API_BASE_URL}/api/download-video/${currentLesson.videoId}`;
+      const downloadUrl = `${API_BASE_URL}/api/download-video/${videoId}`;
 
       // Create a temporary link and trigger download
       const a = document.createElement('a');
       a.href = downloadUrl;
-      a.download = `animation_${currentLesson.videoId}.mp4`;
+      a.download = `animation_${videoId}.mp4`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -99,7 +106,8 @@ function VideoGenerator({ showSplash }) {
   };
 
   const handleShareToCommunity = async () => {
-    if (!currentLesson.videoId) {
+    const videoId = videoData?.videoId || currentLesson.videoId;
+    if (!videoId) {
       setError('No video to share');
       return;
     }
@@ -108,7 +116,7 @@ function VideoGenerator({ showSplash }) {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/videos/${currentLesson.videoId}/share-to-community`, {
+      const response = await fetch(`${API_BASE_URL}/api/videos/${videoId}/share-to-community`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -138,6 +146,11 @@ function VideoGenerator({ showSplash }) {
     setError('');
     setPdfFile(null);
     setPdfPreview(null);
+    setVideoData(null);
+    setQuizData(null);
+    setQuizId(null);
+    setTags([]);
+    setTagInput('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -149,31 +162,39 @@ function VideoGenerator({ showSplash }) {
       return;
     }
 
-    setContextLoading(true);
+    // Reset states and start loading
     setError('');
-    clearLesson(); // Clear the lesson context
+    clearLesson();
     setTags([]);
     setTagInput('');
+    setVideoData(null);
+    setQuizData(null);
+    setQuizId(null);
+    setVideoLoading(true);
+    setQuizLoading(true);
 
-    try {
-      const formData = new FormData();
-      formData.append('prompt', prompt);
-      if (pdfFile) {
-        formData.append('pdf', pdfFile);
-      }
+    const formData = new FormData();
+    formData.append('prompt', prompt);
+    if (pdfFile) {
+      formData.append('pdf', pdfFile);
+    }
 
-      const response = await fetch(`${API_BASE_URL}/api/generate-video`, {
-        method: 'POST',
-        body: formData,
-      });
+    // Start video generation
+    const videoPromise = fetch(`${API_BASE_URL}/api/generate-video`, {
+      method: 'POST',
+      body: formData,
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log('Video API Response:', data);
+        if (data.success && data.final_video_url) {
+          setVideoData({
+            videoUrl: `${API_BASE_URL}${data.final_video_url}`,
+            narrationScript: data.script_text || '',
+            videoId: data.video_id || '',
+          });
 
-      const data = await response.json();
-      console.log('API Response:', data); // Debug log
-
-      if (data.success) {
-        // Use the final combined video with embedded audio
-        if (data.final_video_url) {
-          // Update the lesson context with new data
+          // Update lesson context
           updateLesson({
             prompt: prompt,
             videoUrl: `${API_BASE_URL}${data.final_video_url}`,
@@ -183,17 +204,42 @@ function VideoGenerator({ showSplash }) {
             loading: false,
           });
         } else {
-          setError(data.video_error || data.audio_error || 'Failed to generate video');
+          setError(data.error || data.video_error || 'Failed to generate video');
         }
-      } else {
-        setError(data.error || 'Failed to generate video');
-      }
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setError('Failed to connect to server: ' + err.message);
-    } finally {
-      setContextLoading(false);
-    }
+      })
+      .catch(err => {
+        console.error('Video generation error:', err);
+        setError('Failed to generate video: ' + err.message);
+      })
+      .finally(() => {
+        setVideoLoading(false);
+      });
+
+    // Start quiz generation
+    const quizPromise = fetch(`${API_BASE_URL}/api/generate-quiz`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log('Quiz API Response:', data);
+        if (data.success) {
+          setQuizData({ questions: data.questions });
+          setQuizId(data.quiz_id);
+        } else {
+          console.warn('Quiz generation failed:', data.error);
+        }
+      })
+      .catch(err => {
+        console.error('Quiz generation error:', err);
+      })
+      .finally(() => {
+        setQuizLoading(false);
+      });
+
+    // Wait for both (but they run independently)
+    await Promise.allSettled([videoPromise, quizPromise]);
   };
 
   return (
@@ -221,7 +267,7 @@ function VideoGenerator({ showSplash }) {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Ask a question or describe what you'd like to learn..."
-              disabled={loading}
+              disabled={videoLoading || quizLoading}
               className="chat-input"
               rows="1"
               onKeyDown={(e) => {
@@ -243,7 +289,7 @@ function VideoGenerator({ showSplash }) {
               
               <button
                 onClick={() => fileInputRef.current?.click()}
-                disabled={loading}
+                disabled={videoLoading || quizLoading}
                 className="attach-btn celestial-btn"
                 title="Attach PDF"
               >
@@ -251,14 +297,14 @@ function VideoGenerator({ showSplash }) {
                   <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
                 </svg>
               </button>
-              
+
               <button
                 onClick={handleGenerate}
-                disabled={loading || !prompt.trim()}
+                disabled={(videoLoading || quizLoading) || !prompt.trim()}
                 className="send-btn celestial-btn"
                 title="Generate Animation"
               >
-                {loading ? (
+                {(videoLoading || quizLoading) ? (
                   <div className="btn-spinner"></div>
                 ) : (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -309,16 +355,16 @@ function VideoGenerator({ showSplash }) {
         </div>
       )}
 
-      {/* Loading Message */}
-      {loading && (
+      {/* Video Loading */}
+      {videoLoading && (
         <div className="message-card loading-message">
-          <div className="loading-spinner"></div>
-          <p>Generating your animation... This may take a minute.</p>
+          <ConstellationLoading />
+          <p style={{ marginTop: '1rem', color: '#9ca3af' }}>Generating your video...</p>
         </div>
       )}
 
       {/* Video Section */}
-      {currentLesson.hasContent && (
+      {videoData && (
         <div className="video-section">
           <h2 className="section-title">Your Animation</h2>
 
@@ -339,7 +385,7 @@ function VideoGenerator({ showSplash }) {
             </button>
 
             {/* Share to Community Button */}
-            {currentLesson.videoId && (
+            {videoData?.videoId && (
               <div className="share-section">
                 {!currentLesson.sharedToCommunity ? (
                   <div className="share-container">
@@ -401,13 +447,28 @@ function VideoGenerator({ showSplash }) {
             <video
               ref={videoRef}
               controls
-              key={currentLesson.videoUrl}
+              key={videoData.videoUrl}
               className="video-player"
             >
-              <source src={currentLesson.videoUrl} type="video/mp4" />
+              <source src={videoData.videoUrl} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>
+        </div>
+      )}
+
+      {/* Quiz Loading */}
+      {quizLoading && (
+        <div className="message-card loading-message" style={{ marginTop: '2rem' }}>
+          <ConstellationLoading />
+          <p style={{ marginTop: '1rem', color: '#9ca3af' }}>Generating your quiz...</p>
+        </div>
+      )}
+
+      {/* Quiz Section */}
+      {quizData && quizId && (
+        <div className="quiz-section">
+          <QuizContainer quizData={quizData} quizId={quizId} />
         </div>
       )}
     </div>
