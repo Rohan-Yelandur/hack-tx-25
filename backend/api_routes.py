@@ -16,20 +16,25 @@ def register_routes(app):
     COMMUNITY_FILE = Path('community_videos.json')
 
     def load_community_videos():
-        """Load the list of community video IDs from JSON file."""
+        """Load the list of community videos from JSON file."""
         if not COMMUNITY_FILE.exists():
-            return []
+            return {}
         try:
             with open(COMMUNITY_FILE, 'r') as f:
-                return json.load(f)
+                data = json.load(f)
+                # Handle old format (list of IDs) and convert to new format (dict)
+                if isinstance(data, list):
+                    # Migrate old format to new format
+                    return {video_id: {'tags': []} for video_id in data}
+                return data
         except:
-            return []
+            return {}
 
-    def save_community_videos(video_ids):
-        """Save the list of community video IDs to JSON file."""
+    def save_community_videos(videos_dict):
+        """Save the community videos dictionary to JSON file."""
         try:
             with open(COMMUNITY_FILE, 'w') as f:
-                json.dump(video_ids, f, indent=2)
+                json.dump(videos_dict, f, indent=2)
             return True
         except Exception as e:
             print(f"Error saving community videos: {e}")
@@ -279,8 +284,9 @@ def register_routes(app):
 
             print("[API-Videos] Fetching community videos...")
 
-            # Load community video IDs
-            community_video_ids = load_community_videos()
+            # Load community videos
+            community_videos_dict = load_community_videos()
+            community_video_ids = list(community_videos_dict.keys())
             print(f"[API-Videos] Found {len(community_video_ids)} community videos")
 
             # Get all video files
@@ -392,6 +398,10 @@ def register_routes(app):
                 if code_path:
                     video_entry['manim_code_url'] = f'/api/manim-code/{code_path.name}'
 
+                # Add tags if available
+                if timestamp in community_videos_dict:
+                    video_entry['tags'] = community_videos_dict[timestamp].get('tags', [])
+
                 videos.append(video_entry)
 
             print(f"[API-Videos] Found {len(videos)} videos")
@@ -414,7 +424,7 @@ def register_routes(app):
 
     @app.route('/api/videos/<video_id>/share-to-community', methods=['POST'])
     def share_to_community(video_id):
-        """Mark a video as shared to the community."""
+        """Mark a video as shared to the community with optional tags."""
         try:
             from settings import settings
 
@@ -428,26 +438,42 @@ def register_routes(app):
                     'success': False
                 }), 404
 
+            # Get tags from request body
+            data = request.json or {}
+            tags = data.get('tags', [])
+
+            # Validate tags (ensure they're strings and limit to 5)
+            if not isinstance(tags, list):
+                tags = []
+            tags = [str(tag).strip().lower() for tag in tags if tag][:5]
+
             # Load current community videos
             community_videos = load_community_videos()
 
             # Check if already shared
             if video_id in community_videos:
+                # Update tags if provided
+                community_videos[video_id]['tags'] = tags
+                save_community_videos(community_videos)
                 return jsonify({
                     'success': True,
-                    'message': 'Video already shared to community',
-                    'video_id': video_id
+                    'message': 'Video already shared to community, tags updated',
+                    'video_id': video_id,
+                    'tags': tags
                 })
 
-            # Add to community
-            community_videos.append(video_id)
+            # Add to community with tags
+            community_videos[video_id] = {
+                'tags': tags
+            }
 
             if save_community_videos(community_videos):
-                print(f"[API-Community] Video {video_id} shared to community")
+                print(f"[API-Community] Video {video_id} shared to community with tags: {tags}")
                 return jsonify({
                     'success': True,
                     'message': 'Video shared to community',
-                    'video_id': video_id
+                    'video_id': video_id,
+                    'tags': tags
                 })
             else:
                 return jsonify({
@@ -482,7 +508,7 @@ def register_routes(app):
                 })
 
             # Remove from community
-            community_videos.remove(video_id)
+            del community_videos[video_id]
 
             if save_community_videos(community_videos):
                 print(f"[API-Community] Video {video_id} removed from community")
@@ -518,6 +544,85 @@ def register_routes(app):
         if video_path.exists():
             return send_file(video_path, mimetype='video/mp4')
         return jsonify({'error': 'Video not found'}), 404
+
+
+    @app.route('/api/download-video/<video_id>', methods=['GET'])
+    def download_video_with_audio(video_id):
+        """Download video merged with audio."""
+        from settings import settings
+        import subprocess
+        import tempfile
+
+        try:
+            # Get video path
+            video_path = Path(settings.OUTPUT_DIR) / f'{video_id}.mp4'
+            if not video_path.exists():
+                return jsonify({'error': 'Video not found'}), 404
+
+            # Get audio path
+            audio_path = Path(settings.AUDIO_DIR) / f'audio_{video_id}.mp3'
+
+            # If no audio, just serve the video
+            if not audio_path.exists():
+                print(f"[API-Download] No audio found for {video_id}, serving video only")
+                return send_file(video_path, mimetype='video/mp4', as_attachment=True, download_name=f'animation_{video_id}.mp4')
+
+            # Create temporary file for merged output
+            merged_output = Path(settings.OUTPUT_DIR) / f'{video_id}_merged.mp4'
+
+            # Check if merged file already exists
+            if merged_output.exists():
+                print(f"[API-Download] Using cached merged video: {merged_output}")
+                return send_file(merged_output, mimetype='video/mp4', as_attachment=True, download_name=f'animation_{video_id}.mp4')
+
+            print(f"[API-Download] Merging video and audio for {video_id}...")
+
+            # Use ffmpeg to merge video and audio
+            # -i: input file
+            # -map 0:v: take video from first input
+            # -map 1:a: take audio from second input
+            # -c:v copy: don't re-encode video (faster)
+            # -c:a aac: encode audio as AAC (compatible)
+            # -shortest: end when shortest stream ends
+            ffmpeg_cmd = [
+                'ffmpeg',
+                '-i', str(video_path),
+                '-i', str(audio_path),
+                '-map', '0:v',
+                '-map', '1:a',
+                '-c:v', 'copy',
+                '-c:a', 'aac',
+                '-shortest',
+                '-y',  # Overwrite output file if exists
+                str(merged_output)
+            ]
+
+            result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True)
+
+            if result.returncode != 0:
+                print(f"[API-Download ERROR] ffmpeg failed: {result.stderr}")
+                # Fallback to video only
+                return send_file(video_path, mimetype='video/mp4', as_attachment=True, download_name=f'animation_{video_id}.mp4')
+
+            print(f"[API-Download] Successfully merged video and audio")
+
+            # Serve the merged file
+            return send_file(merged_output, mimetype='video/mp4', as_attachment=True, download_name=f'animation_{video_id}.mp4')
+
+        except Exception as e:
+            error_msg = f"{type(e).__name__}: {str(e)}"
+            print(f"[API-Download ERROR] {error_msg}")
+            import traceback
+            traceback.print_exc()
+
+            # Fallback to video only on error
+            if video_path.exists():
+                return send_file(video_path, mimetype='video/mp4', as_attachment=True, download_name=f'animation_{video_id}.mp4')
+
+            return jsonify({
+                'error': error_msg,
+                'error_type': type(e).__name__
+            }), 500
     
     
     @app.route('/api/manim-code/<filename>', methods=['GET'])
