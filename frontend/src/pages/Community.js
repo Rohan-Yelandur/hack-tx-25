@@ -4,14 +4,59 @@ import { API_BASE_URL } from '../config/constants';
 
 function Community() {
   const [videos, setVideos] = useState([]);
+  const [filteredVideos, setFilteredVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+<<<<<<< HEAD
+  const [expandedCode, setExpandedCode] = useState({});
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
+=======
+>>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
   const videoRefs = useRef({});
 
   useEffect(() => {
     fetchVideos();
   }, []);
 
+<<<<<<< HEAD
+  // Sync audio with video for a specific video ID
+  useEffect(() => {
+    filteredVideos.forEach((video) => {
+      if (!video.audio_url) return;
+
+      const videoElement = videoRefs.current[video.id];
+      const audioElement = audioRefs.current[video.id];
+
+      if (!videoElement || !audioElement) return;
+
+      const handlePlay = () => {
+        audioElement.currentTime = videoElement.currentTime;
+        audioElement.play().catch(err => console.log('Audio play error:', err));
+      };
+
+      const handlePause = () => {
+        audioElement.pause();
+      };
+
+      const handleSeeking = () => {
+        audioElement.currentTime = videoElement.currentTime;
+      };
+
+      videoElement.addEventListener('play', handlePlay);
+      videoElement.addEventListener('pause', handlePause);
+      videoElement.addEventListener('seeking', handleSeeking);
+
+      return () => {
+        videoElement.removeEventListener('play', handlePlay);
+        videoElement.removeEventListener('pause', handlePause);
+        videoElement.removeEventListener('seeking', handleSeeking);
+      };
+    });
+  }, [filteredVideos]);
+
+=======
+>>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
   const fetchVideos = async () => {
     try {
       setLoading(true);
@@ -22,6 +67,16 @@ function Community() {
 
       if (data.success) {
         setVideos(data.videos);
+        setFilteredVideos(data.videos);
+
+        // Extract all unique tags from videos
+        const tags = new Set();
+        data.videos.forEach(video => {
+          if (video.tags && Array.isArray(video.tags)) {
+            video.tags.forEach(tag => tags.add(tag));
+          }
+        });
+        setAvailableTags(Array.from(tags).sort());
       } else {
         setError(data.error || 'Failed to load videos');
       }
@@ -33,6 +88,54 @@ function Community() {
     }
   };
 
+<<<<<<< HEAD
+  // Filter videos when selected tags change
+  useEffect(() => {
+    if (selectedTags.length === 0) {
+      setFilteredVideos(videos);
+    } else {
+      const filtered = videos.filter(video => {
+        if (!video.tags || video.tags.length === 0) return false;
+        // Video must have at least one of the selected tags
+        return selectedTags.some(tag => video.tags.includes(tag));
+      });
+      setFilteredVideos(filtered);
+    }
+  }, [selectedTags, videos]);
+
+  const toggleTag = (tag) => {
+    setSelectedTags(prev => {
+      if (prev.includes(tag)) {
+        return prev.filter(t => t !== tag);
+      } else {
+        return [...prev, tag];
+      }
+    });
+  };
+
+  const clearFilters = () => {
+    setSelectedTags([]);
+  };
+
+  const handleDownload = (videoId) => {
+    const downloadUrl = `${API_BASE_URL}/api/download-video/${videoId}`;
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = `animation_${videoId}.mp4`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const toggleCode = (videoId) => {
+    setExpandedCode(prev => ({
+      ...prev,
+      [videoId]: !prev[videoId]
+    }));
+  };
+
+=======
+>>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
   const formatDate = (timestamp) => {
     const date = new Date(timestamp * 1000);
     return date.toLocaleString('en-US', {
@@ -72,8 +175,47 @@ function Community() {
         </div>
       )}
 
+      {/* Tag Filters */}
+      {!loading && !error && availableTags.length > 0 && (
+        <div className="filters-section">
+          <div className="filters-header">
+            <h3>Filter by Tags:</h3>
+            {selectedTags.length > 0 && (
+              <button onClick={clearFilters} className="clear-filters-btn">
+                Clear Filters
+              </button>
+            )}
+          </div>
+          <div className="tag-filters">
+            {availableTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => toggleTag(tag)}
+                className={`filter-tag ${selectedTags.includes(tag) ? 'active' : ''}`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+          {selectedTags.length > 0 && (
+            <p className="filter-results">
+              Showing {filteredVideos.length} of {videos.length} videos
+            </p>
+          )}
+        </div>
+      )}
+
+      {!loading && !error && filteredVideos.length === 0 && videos.length > 0 && (
+        <div className="empty-state">
+          <p>No videos match the selected tags.</p>
+          <button onClick={clearFilters} className="clear-filters-btn">
+            Clear Filters
+          </button>
+        </div>
+      )}
+
       <div className="videos-grid">
-        {videos.map((video) => (
+        {filteredVideos.map((video) => (
           <div key={video.id} className="video-card">
             <div className="video-player-container">
               <video
@@ -87,10 +229,42 @@ function Community() {
             </div>
 
             <div className="video-info">
+<<<<<<< HEAD
+              {video.script_text && (
+                <div className="script-preview">
+                  <h3>Narration</h3>
+                  <p>{video.script_text}</p>
+                </div>
+              )}
+
+              {/* Display video tags */}
+              {video.tags && video.tags.length > 0 && (
+                <div className="video-tags">
+                  {video.tags.map((tag, index) => (
+                    <span key={index} className="video-tag">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+=======
+>>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
               <div className="video-meta">
                 <span className="timestamp">
                   {formatDate(video.created_at)}
                 </span>
+                <button
+                  onClick={() => handleDownload(video.id)}
+                  className="download-video-btn"
+                  title="Download video with audio"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
