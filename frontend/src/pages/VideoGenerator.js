@@ -62,21 +62,26 @@ function VideoGenerator() {
   };
 
   const handleDownload = async () => {
-    if (!videoId) {
+    if (!currentLesson.videoId) {
       setError('No video to download');
       return;
     }
 
     try {
-      // Use the new download endpoint that merges video and audio
-      const downloadUrl = `${API_BASE_URL}/api/download-video/${videoId}`;
+      // Fetch the video as a blob to force download instead of navigation
+      const response = await fetch(currentLesson.videoUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
 
-      // Create a temporary link and trigger download
       const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = `animation_${videoId}.mp4`;
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `animation_${currentLesson.videoId}.mp4`;
       document.body.appendChild(a);
       a.click();
+
+      // Clean up
+      window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
       setError('Failed to download video: ' + err.message);
@@ -151,18 +156,8 @@ function VideoGenerator() {
 
     setContextLoading(true);
     setError('');
-<<<<<<< HEAD
-    setVideoUrl('');
-    setManimCode('');
-    setNarrationScript('');
-    setAudioUrl('');
-    setShowContent(false);
-    setVideoId('');
-    setSharedToCommunity(false);
     setTags([]);
     setTagInput('');
-=======
->>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
 
     try {
       const formData = new FormData();
@@ -330,90 +325,27 @@ function VideoGenerator() {
       {/* Video Section */}
       {currentLesson.hasContent && (
         <div className="video-section">
-<<<<<<< HEAD
-          <h2 className="section-title">Your Animation</h2>
-
-          {/* Action Buttons */}
-          <div className="action-buttons">
-            {/* Download Button */}
-            <button
-              onClick={handleDownload}
-              className="download-btn"
-              title="Download video"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              Download
-            </button>
-
-            {/* Share to Community Button */}
-            {videoId && (
-              <div className="share-section">
-                {!sharedToCommunity ? (
-                  <div className="share-container">
-                    {/* Tag Input */}
-                    <div className="tag-input-section">
-                      <label className="tag-label">Add tags (optional, max 5):</label>
-                      <div className="tag-input-wrapper">
-                        <input
-                          type="text"
-                          value={tagInput}
-                          onChange={(e) => setTagInput(e.target.value)}
-                          onKeyDown={handleAddTag}
-                          placeholder="e.g., math, physics, tutorial"
-                          className="tag-input"
-                          maxLength={20}
-                          disabled={tags.length >= 5}
-                        />
-                        {tags.length < 5 && (
-                          <small className="tag-hint">Press Enter to add tag</small>
-                        )}
-                      </div>
-                      {/* Tag Display */}
-                      {tags.length > 0 && (
-                        <div className="tags-display">
-                          {tags.map((tag, index) => (
-                            <span key={index} className="tag-pill">
-                              {tag}
-                              <button
-                                onClick={() => handleRemoveTag(tag)}
-                                className="tag-remove"
-                                aria-label="Remove tag"
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <button
-                      onClick={handleShareToCommunity}
-                      disabled={sharingLoading}
-                      className="share-btn"
-                    >
-                      {sharingLoading ? 'Sharing...' : '✨ Share to Community'}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="shared-message">
-                    ✓ Shared to Community Gallery!
-                  </div>
-                )}
-              </div>
-            )}
-=======
           <div className="section-header">
             <h2 className="section-title">Your Animation</h2>
             <div className="header-buttons">
+              {/* Download Button */}
+              <button
+                onClick={handleDownload}
+                className="download-btn celestial-btn"
+                title="Download video"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </button>
+
+              {/* Share to Community Section */}
               {currentLesson.videoId && !currentLesson.sharedToCommunity && (
                 <button
                   onClick={handleShareToCommunity}
-                  disabled={sharingLoading}
+                  disabled={sharingLoading || tags.length === 0}
                   className="share-btn celestial-btn"
                   title="Share to Community"
                 >
@@ -446,7 +378,6 @@ function VideoGenerator() {
                 </svg>
               </button>
             </div>
->>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
           </div>
 
           <div className="video-container">
@@ -460,6 +391,45 @@ function VideoGenerator() {
               Your browser does not support the video tag.
             </video>
           </div>
+
+          {/* Tagging Section - Only show if not shared yet */}
+          {currentLesson.videoId && !currentLesson.sharedToCommunity && (
+            <div className="tagging-section">
+              <h3>Add Tags (Optional)</h3>
+              <p className="tag-hint">Add up to 5 tags to help others discover your video</p>
+
+              <div className="tag-input-container">
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleAddTag}
+                  placeholder="Type a tag and press Enter..."
+                  maxLength={20}
+                  disabled={tags.length >= 5}
+                  className="tag-input"
+                />
+                <span className="tag-count">{tags.length}/5</span>
+              </div>
+
+              {tags.length > 0 && (
+                <div className="current-tags">
+                  {tags.map((tag, index) => (
+                    <span key={index} className="tag-chip">
+                      {tag}
+                      <button
+                        onClick={() => handleRemoveTag(tag)}
+                        className="tag-remove"
+                        aria-label="Remove tag"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

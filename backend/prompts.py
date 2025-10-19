@@ -67,7 +67,9 @@ CORE STRUCTURE:
     self.play(Create(group))
 
     COLORS:
-    Use: RED, BLUE, GREEN, YELLOW, PURPLE, ORANGE, PINK, WHITE, GRAY, BLACK, TEAL, MAROON, etc.
+    Standard colors: RED, BLUE, GREEN, YELLOW, PURPLE, ORANGE, PINK, WHITE, GRAY, GREY, BLACK, TEAL, MAROON, GOLD, DARK_BLUE, LIGHT_GRAY
+    **IMPORTANT: DO NOT use BROWN - it is not defined. Use MAROON, ORANGE, or hex colors like "#8B4513" instead**
+    For custom colors use hex: obj.set_color("#8B4513")
     Set with: obj.set_color(BLUE) or color=BLUE in constructor
 
     COMMON PARAMETERS:
@@ -157,7 +159,8 @@ def generate_manim_prompt(prompt: str) -> str:
     2. **CRITICAL: Verify all objects fit within frame bounds (X: -6 to 6, Y: -3 to 3)**
     3. **Check object sizes: circles radius ≤ 1.5, squares side_length ≤ 2, text scale ≤ 1.5**
     4. **If scene has multiple objects, scale the entire VGroup to 0.7 or 0.8 to ensure everything fits**
-    5. Return only the final Python code that will render WITHOUT cropping
+    5. **NEVER use BROWN - it doesn't exist in Manim. Use MAROON, ORANGE, or hex colors like "#8B4513" instead**
+    6. Return only the final Python code that will render WITHOUT cropping
     
     Now generate code for: {prompt}
     """
@@ -224,6 +227,9 @@ ANIMATION TIMING STRATEGY:
 - Use run_time parameter: self.play(Create(obj), run_time=x) to match word timing
 - Add brief pauses: self.wait(0.2-0.5) between major transitions
 - Keep animations smooth and natural
+- **CRITICAL: NEVER use negative wait times. Always ensure self.wait() has a positive duration**
+- **Use max(0.1, target_time - current_time) to prevent negative waits**
+- Example: self.wait(max(0.1, 5.22 - 4.58)) ensures minimum 0.1s wait
 
 Use these manim docs to help you when generating code: {manim_docs}
     
@@ -234,7 +240,9 @@ VALIDATION INSTRUCTIONS:
 4. **If scene has multiple objects, scale the entire VGroup to 0.7 or 0.8 to ensure everything fits**
 5. **Verify total animation time matches {total_duration:.2f} seconds**
 6. **Use Text() objects ONLY - no MathTex, Tex, or LaTeX**
-7. Fix any syntax errors before returning code
+7. **NEVER use BROWN - it doesn't exist in Manim. Use MAROON, ORANGE, or hex colors like "#8B4513" instead**
+8. **NEVER use negative wait times - use max(0.1, target_time - current_time) to ensure all waits are positive**
+9. Fix any syntax errors before returning code
 
     
 Now generate audio-synchronized Manim code for this visualization of the narration script.

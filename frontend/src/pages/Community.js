@@ -6,57 +6,16 @@ function Community() {
   const [videos, setVideos] = useState([]);
   const [filteredVideos, setFilteredVideos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-<<<<<<< HEAD
+  const [error, setError] = useState([]);
   const [expandedCode, setExpandedCode] = useState({});
   const [selectedTags, setSelectedTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
-=======
->>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
   const videoRefs = useRef({});
 
   useEffect(() => {
     fetchVideos();
   }, []);
 
-<<<<<<< HEAD
-  // Sync audio with video for a specific video ID
-  useEffect(() => {
-    filteredVideos.forEach((video) => {
-      if (!video.audio_url) return;
-
-      const videoElement = videoRefs.current[video.id];
-      const audioElement = audioRefs.current[video.id];
-
-      if (!videoElement || !audioElement) return;
-
-      const handlePlay = () => {
-        audioElement.currentTime = videoElement.currentTime;
-        audioElement.play().catch(err => console.log('Audio play error:', err));
-      };
-
-      const handlePause = () => {
-        audioElement.pause();
-      };
-
-      const handleSeeking = () => {
-        audioElement.currentTime = videoElement.currentTime;
-      };
-
-      videoElement.addEventListener('play', handlePlay);
-      videoElement.addEventListener('pause', handlePause);
-      videoElement.addEventListener('seeking', handleSeeking);
-
-      return () => {
-        videoElement.removeEventListener('play', handlePlay);
-        videoElement.removeEventListener('pause', handlePause);
-        videoElement.removeEventListener('seeking', handleSeeking);
-      };
-    });
-  }, [filteredVideos]);
-
-=======
->>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
   const fetchVideos = async () => {
     try {
       setLoading(true);
@@ -88,7 +47,6 @@ function Community() {
     }
   };
 
-<<<<<<< HEAD
   // Filter videos when selected tags change
   useEffect(() => {
     if (selectedTags.length === 0) {
@@ -117,14 +75,32 @@ function Community() {
     setSelectedTags([]);
   };
 
-  const handleDownload = (videoId) => {
-    const downloadUrl = `${API_BASE_URL}/api/download-video/${videoId}`;
-    const a = document.createElement('a');
-    a.href = downloadUrl;
-    a.download = `animation_${videoId}.mp4`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const handleDownload = async (videoId) => {
+    // Videos already have audio embedded (final_video_url)
+    const video = videos.find(v => v.id === videoId);
+    if (video && video.final_video_url) {
+      try {
+        const downloadUrl = `${API_BASE_URL}${video.final_video_url}`;
+
+        // Fetch the video as a blob to force download instead of navigation
+        const response = await fetch(downloadUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `animation_${videoId}.mp4`;
+        document.body.appendChild(a);
+        a.click();
+
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } catch (err) {
+        console.error('Download failed:', err);
+      }
+    }
   };
 
   const toggleCode = (videoId) => {
@@ -134,8 +110,6 @@ function Community() {
     }));
   };
 
-=======
->>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
   const formatDate = (timestamp) => {
     const date = new Date(timestamp * 1000);
     return date.toLocaleString('en-US', {
@@ -229,7 +203,6 @@ function Community() {
             </div>
 
             <div className="video-info">
-<<<<<<< HEAD
               {video.script_text && (
                 <div className="script-preview">
                   <h3>Narration</h3>
@@ -248,8 +221,6 @@ function Community() {
                 </div>
               )}
 
-=======
->>>>>>> 540152b405d4123081d56b0df595c17bb0d9f7cc
               <div className="video-meta">
                 <span className="timestamp">
                   {formatDate(video.created_at)}
@@ -266,6 +237,30 @@ function Community() {
                   </svg>
                 </button>
               </div>
+
+              {video.manim_code_url && (
+                <div className="code-section">
+                  <button
+                    onClick={() => toggleCode(video.id)}
+                    className="toggle-code-button"
+                  >
+                    {expandedCode[video.id] ? 'Hide Code' : 'View Code'}
+                  </button>
+
+                  {expandedCode[video.id] && (
+                    <div className="code-container">
+                      <a
+                        href={`${API_BASE_URL}${video.manim_code_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="view-code-link"
+                      >
+                        Open Code File →
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ))}
