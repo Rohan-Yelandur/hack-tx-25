@@ -6,13 +6,8 @@ function Community() {
   const [videos, setVideos] = useState([]);
   const [filteredVideos, setFilteredVideos] = useState([]);
   const [loading, setLoading] = useState(true);
-<<<<<<< HEAD
-  const [error, setError] = useState([]);
-  const [expandedCode, setExpandedCode] = useState({});
-=======
   const [error, setError] = useState('');
-  
->>>>>>> 6f9dfdd1a84070bc3cc09979e2e08e4c53104301
+  const [expandedCode, setExpandedCode] = useState({});
   const [selectedTags, setSelectedTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
   const videoRefs = useRef({});
@@ -22,8 +17,6 @@ function Community() {
     fetchVideos();
   }, []);
 
-<<<<<<< HEAD
-=======
   // Sync audio with video for a specific video ID
   useEffect(() => {
     const cleanups = [];
@@ -64,7 +57,6 @@ function Community() {
     };
   }, [filteredVideos]);
 
->>>>>>> 6f9dfdd1a84070bc3cc09979e2e08e4c53104301
   const fetchVideos = async () => {
     try {
       setLoading(true);
@@ -152,7 +144,14 @@ function Community() {
     }
   };
 
-  
+  const toggleCode = (videoId) => {
+    setExpandedCode(prev => ({
+      ...prev,
+      [videoId]: !prev[videoId]
+    }));
+  };
+
+
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp * 1000);
