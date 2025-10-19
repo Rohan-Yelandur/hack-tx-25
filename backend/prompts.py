@@ -152,15 +152,12 @@ def generate_manim_prompt(prompt: str) -> str:
        
   Use these manim docs to help you when generating code: {manim_docs}
     
-    VALIDATION INSTRUCTIONS:
-    1. Write the Manim code for the request
-    2. Use code execution to validate the syntax (check imports, class definition, method syntax)
-    3. **CRITICAL: Verify all objects fit within frame bounds (X: -6 to 6, Y: -3 to 3)**
-    4. **Check object sizes: circles radius ≤ 1.5, squares side_length ≤ 2, text scale ≤ 1.5**
-    5. **If scene has multiple objects, scale the entire VGroup to 0.7 or 0.8 to ensure everything fits**
-    6. Fix any syntax errors found during validation
-    7. Return only the final, validated Python code that will render WITHOUT cropping
-    Remember: Use code execution to validate your code before returning it!
+    IMPORTANT GUIDELINES:
+    1. Write clean, working Manim code for the request
+    2. **CRITICAL: Verify all objects fit within frame bounds (X: -6 to 6, Y: -3 to 3)**
+    3. **Check object sizes: circles radius ≤ 1.5, squares side_length ≤ 2, text scale ≤ 1.5**
+    4. **If scene has multiple objects, scale the entire VGroup to 0.7 or 0.8 to ensure everything fits**
+    5. Return only the final Python code that will render WITHOUT cropping
     
     Now generate code for: {prompt}
     """

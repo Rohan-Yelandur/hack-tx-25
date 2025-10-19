@@ -15,6 +15,12 @@ class Settings:
     # Model Configs
     GEMINI_MODEL = "gemini-2.5-pro"
     ELEVENLABS_MODEL = "eleven_turbo_v2_5"
+    
+    # ElevenLabs Voice Settings
+    ELEVENLABS_STABILITY = 0.5      # 0.0-1.0: Voice stability
+    ELEVENLABS_SIMILARITY = 0.75    # 0.0-1.0: Voice similarity
+    ELEVENLABS_STYLE = 0.0          # 0.0-1.0: Style exaggeration
+    ELEVENLABS_SPEED = 1.15          # 0.7-1.2: Speaking speed (1.0 = normal)
 
     # Manim Configuration
     MANIM_QUALITY = "ql"  # Low quality for faster rendering

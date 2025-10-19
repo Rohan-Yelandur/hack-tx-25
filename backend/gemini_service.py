@@ -1,5 +1,4 @@
 from google import genai
-from google.genai import types
 from settings import settings
 from prompts import generate_manim_prompt, generate_manim_from_script_prompt
 import time
@@ -11,11 +10,11 @@ class GeminiService:
         self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
     
     def generate_manim_code(self, prompt: str) -> str:
-        """Generate Manim code using Gemini with code execution tool."""
+        """Generate Manim code using Gemini."""
         try:
             full_prompt = generate_manim_prompt(prompt)
             
-            # Enable code execution tool for better code generation
+            # Generate Manim code directly without validation
             response = self.client.models.generate_content(
                 model=settings.GEMINI_MODEL, 
                 contents=full_prompt,
@@ -23,7 +22,7 @@ class GeminiService:
             
             # Extract the generated code from the response
             generated_code = response.text.strip().replace("```python", "").replace("```", "").strip()
-            
+
             return generated_code
             
         except Exception as e:
