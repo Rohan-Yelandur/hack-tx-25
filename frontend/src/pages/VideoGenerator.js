@@ -3,9 +3,8 @@ import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../config/constants';
 import { useLessonContext } from '../context/LessonContext';
 import './VideoGenerator.css';
-import ConstellationLoading from '../components/ConstellationLoading';
 
-function VideoGenerator() {
+function VideoGenerator({ showSplash }) {
   const { currentLesson, updateLesson, clearLesson, setLoading: setContextLoading } = useLessonContext();
   
   const [prompt, setPrompt] = useState(currentLesson.prompt || '');
@@ -17,7 +16,6 @@ function VideoGenerator() {
   const [tagInput, setTagInput] = useState('');
 
   const videoRef = useRef(null);
-  const inputSectionRef = useRef(null);
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -39,37 +37,6 @@ function VideoGenerator() {
       textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
     }
   }, [prompt]);
-
-  // Smooth scroll helper (duration in ms)
-  const smoothScrollTo = (targetY, duration = 600) => {
-    const startY = window.scrollY || window.pageYOffset;
-    const diff = targetY - startY;
-    let start;
-
-    const easeInOutCubic = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-
-    const step = (timestamp) => {
-      if (!start) start = timestamp;
-      const elapsed = timestamp - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = easeInOutCubic(progress);
-      window.scrollTo(0, startY + diff * eased);
-      if (elapsed < duration) {
-        window.requestAnimationFrame(step);
-      }
-    };
-
-    window.requestAnimationFrame(step);
-  };
-
-  // Scroll to input section when arrow clicked (smooth animation)
-  const scrollToInput = () => {
-    if (inputSectionRef.current) {
-      const rect = inputSectionRef.current.getBoundingClientRect();
-      const targetY = rect.top + window.pageYOffset - 20; // small offset
-      smoothScrollTo(targetY, 650);
-    }
-  };
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -101,20 +68,15 @@ function VideoGenerator() {
     }
 
     try {
-      // Fetch the video as a blob to force download instead of navigation
-      const response = await fetch(currentLesson.videoUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // Use the new download endpoint that merges video and audio
+      const downloadUrl = `${API_BASE_URL}/api/download-video/${currentLesson.videoId}`;
 
+      // Create a temporary link and trigger download
       const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
+      a.href = downloadUrl;
       a.download = `animation_${currentLesson.videoId}.mp4`;
       document.body.appendChild(a);
       a.click();
-
-      // Clean up
-      window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
       setError('Failed to download video: ' + err.message);
@@ -176,8 +138,6 @@ function VideoGenerator() {
     setError('');
     setPdfFile(null);
     setPdfPreview(null);
-    setTags([]);
-    setTagInput('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -191,6 +151,7 @@ function VideoGenerator() {
 
     setContextLoading(true);
     setError('');
+    clearLesson(); // Clear the lesson context
     setTags([]);
     setTagInput('');
 
@@ -237,21 +198,13 @@ function VideoGenerator() {
 
   return (
     <div className="video-generator">
-      {/* Hero Section */}
-      <div className="hero-section">
-        <h1 className="hero-title">Canopus</h1>
-        <p className="hero-subtitle">We Help You Connect the Dots</p> 
-
-        <button className="hero-down" onClick={scrollToInput} aria-label="Scroll to generator">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <polyline points="19 12 12 19 5 12"></polyline>
-          </svg>
-        </button>
-      </div>
-
       {/* Input Section */}
-  <div className="input-section" ref={inputSectionRef}>
+      <motion.div 
+        className="input-section"
+        initial={showSplash ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: showSplash ? 0.3 : 0 }}
+      >
         <h2 className="input-title">
           Generate <span className="highlight-cyan">Lessons</span> with AI
         </h2>
@@ -346,7 +299,7 @@ function VideoGenerator() {
             </motion.div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Error Message */}
       {error && (
@@ -359,66 +312,89 @@ function VideoGenerator() {
       {/* Loading Message */}
       {loading && (
         <div className="message-card loading-message">
-          <ConstellationLoading />
+          <div className="loading-spinner"></div>
+          <p>Generating your animation... This may take a minute.</p>
         </div>
       )}
 
       {/* Video Section */}
       {currentLesson.hasContent && (
         <div className="video-section">
-          <div className="section-header">
-            <h2 className="section-title">Your Animation</h2>
-            <div className="header-buttons">
-              {/* Download Button */}
-              <button
-                onClick={handleDownload}
-                className="download-btn celestial-btn"
-                title="Download video"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-              </button>
+          <h2 className="section-title">Your Animation</h2>
 
-              {/* Share to Community Section */}
-              {currentLesson.videoId && !currentLesson.sharedToCommunity && (
-                <button
-                  onClick={handleShareToCommunity}
-                  disabled={sharingLoading || tags.length === 0}
-                  className="share-btn celestial-btn"
-                  title="Share to Community"
-                >
-                  {sharingLoading ? (
-                    <div className="btn-spinner"></div>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
-                    </svg>
-                  )}
-                </button>
-              )}
-              {currentLesson.videoId && currentLesson.sharedToCommunity && (
-                <div className="shared-indicator" title="Shared to Community">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </div>
-              )}
-              <button
-                onClick={handleNewLesson}
-                className="new-lesson-btn celestial-btn"
-                title="Start a new lesson"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="12" y1="18" x2="12" y2="12"></line>
-                  <line x1="9" y1="15" x2="15" y2="15"></line>
-                </svg>
-              </button>
-            </div>
+          {/* Action Buttons */}
+          <div className="action-buttons">
+            {/* Download Button */}
+            <button
+              onClick={handleDownload}
+              className="download-btn"
+              title="Download video"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Download
+            </button>
+
+            {/* Share to Community Button */}
+            {currentLesson.videoId && (
+              <div className="share-section">
+                {!currentLesson.sharedToCommunity ? (
+                  <div className="share-container">
+                    {/* Tag Input */}
+                    <div className="tag-input-section">
+                      <label className="tag-label">Add tags (optional, max 5):</label>
+                      <div className="tag-input-wrapper">
+                        <input
+                          type="text"
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          onKeyDown={handleAddTag}
+                          placeholder="e.g., math, physics, tutorial"
+                          className="tag-input"
+                          maxLength={20}
+                          disabled={tags.length >= 5}
+                        />
+                        {tags.length < 5 && (
+                          <small className="tag-hint">Press Enter to add tag</small>
+                        )}
+                      </div>
+                      {/* Tag Display */}
+                      {tags.length > 0 && (
+                        <div className="tags-display">
+                          {tags.map((tag, index) => (
+                            <span key={index} className="tag-pill">
+                              {tag}
+                              <button
+                                onClick={() => handleRemoveTag(tag)}
+                                className="tag-remove"
+                                aria-label="Remove tag"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={handleShareToCommunity}
+                      disabled={sharingLoading}
+                      className="share-btn"
+                    >
+                      {sharingLoading ? 'Sharing...' : '✨ Share to Community'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="shared-message">
+                    ✓ Shared to Community Gallery!
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="video-container">
@@ -432,45 +408,6 @@ function VideoGenerator() {
               Your browser does not support the video tag.
             </video>
           </div>
-
-          {/* Tagging Section - Only show if not shared yet */}
-          {currentLesson.videoId && !currentLesson.sharedToCommunity && (
-            <div className="tagging-section">
-              <h3>Add Tags (Optional)</h3>
-              <p className="tag-hint">Add up to 5 tags to help others discover your video</p>
-
-              <div className="tag-input-container">
-                <input
-                  type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleAddTag}
-                  placeholder="Type a tag and press Enter..."
-                  maxLength={20}
-                  disabled={tags.length >= 5}
-                  className="tag-input"
-                />
-                <span className="tag-count">{tags.length}/5</span>
-              </div>
-
-              {tags.length > 0 && (
-                <div className="current-tags">
-                  {tags.map((tag, index) => (
-                    <span key={index} className="tag-chip">
-                      {tag}
-                      <button
-                        onClick={() => handleRemoveTag(tag)}
-                        className="tag-remove"
-                        aria-label="Remove tag"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       )}
     </div>

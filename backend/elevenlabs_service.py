@@ -6,7 +6,8 @@ from settings import settings
 import os
 import base64
 import re
-
+import time
+                    
 
 def convert_char_timing_to_word_timing(script: str, char_timing: dict) -> list:
     """
@@ -96,10 +97,6 @@ class ElevenLabsService:
             # If PDF is provided, upload it using the official Files API
             if pdf_path:
                 try:
-                    from pathlib import Path
-                    import time
-                    import os
-                    
                     print(f"[ElevenLabsService] Uploading PDF to Gemini Files API: {pdf_path}")
                     
                     # Check file size (max 50 MB recommended for Gemini 2.5 Flash)
@@ -141,8 +138,8 @@ class ElevenLabsService:
 
                     "{user_prompt}"
 
-                    Based on the content in the PDF document, create a clear, concise audio script that explains this concept or answers this question.
-                    The script should be suitable for narration over an educational animation video.
+                    Based on the content in the PDF document and also the user's question, create a clear, concise audio script that explains this concept that the user is asking about or the subject covered by the problems in the PDF.
+                    The script should be suitable for narration over an educational animation video. It should cover one topic and be concise.
                     
                     Keep the explanation engaging and easy to follow. Structure your script to naturally 
                     break into segments that can be visualized (e.g., introduction, key concepts, examples, conclusion).
@@ -176,12 +173,12 @@ class ElevenLabsService:
                     contents.append(full_prompt)
             else:
                 full_prompt = f"""
-                You are an expert educational content creator. The user has asked the following question:
+                You are an expert educational content creator. The user has asked the following question(s):
 
                 "{user_prompt}"
 
-                Create a clear, concise audio script that explains this concept or answers this question.
-                The script should be suitable for narration over an educational animation video.
+                Create a clear, concise audio script that explains this concept that the user is asking about or the subject covered by the problems that the user may have inputted.
+                The script should be suitable for narration over an educational animation video. It should cover one topic and be concise.
                 
                 Keep the explanation engaging and easy to follow. Structure your script to naturally 
                 break into segments that can be visualized (e.g., introduction, key concepts, examples, conclusion).

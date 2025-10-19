@@ -1,0 +1,50 @@
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #0a0e1a;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.splash-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.splash-title {
+  font-size: 6rem;
+  font-weight: 700;
+  color: #e8e9ed;
+  margin: 0 0 2rem 0;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #8b7fd8 0%, #4dd4e8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 40px rgba(139, 127, 216, 0.3);
+}
+
+.splash-subtitle {
+  font-size: 2rem;
+  color: #a8b2d1;
+  margin: 0;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 768px) {
+  .splash-title {
+    font-size: 3.5rem;
+  }
+
+  .splash-subtitle {
+    font-size: 1.5rem;
+  }
+}
+
