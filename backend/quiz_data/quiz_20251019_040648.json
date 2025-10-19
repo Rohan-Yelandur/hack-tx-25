@@ -1,0 +1,93 @@
+{
+  "quiz_id": "20251019_040648",
+  "video_id": null,
+  "prompt": "Explain quadratic factoring",
+  "questions": [
+    {
+      "id": 1,
+      "type": "multiple-choice",
+      "question_text": "What is the factored form of x^2 + 5x + 6?",
+      "options": [
+        "(x + 1)(x + 6)",
+        "(x + 2)(x + 3)",
+        "(x - 2)(x - 3)",
+        "(x - 1)(x - 6)"
+      ],
+      "correct_answer": "(x + 2)(x + 3)",
+      "explanation": "We need two numbers that add up to 5 and multiply to 6. Those numbers are 2 and 3."
+    },
+    {
+      "id": 2,
+      "type": "step-by-step",
+      "question_text": "Factor the quadratic expression: x^2 - 4x - 12",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "Find two numbers that multiply to -12 and add up to -4. What are these two numbers?",
+          "correct_answer": "-6 and 2",
+          "hint": "Consider both positive and negative factors of -12.",
+          "explanation": "-6 * 2 = -12 and -6 + 2 = -4"
+        },
+        {
+          "stage_number": 2,
+          "prompt": "Write the factored form of the quadratic using the two numbers you found.",
+          "correct_answer": "(x - 6)(x + 2)",
+          "hint": "Remember to include 'x' in each factor.",
+          "explanation": "The factored form using -6 and 2 is (x - 6)(x + 2)."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "multiple-choice",
+      "question_text": "Which of the following quadratic expressions CANNOT be factored using integer coefficients?",
+      "options": [
+        "x^2 + 4x + 3",
+        "x^2 - 6x + 8",
+        "x^2 + 2x + 5",
+        "x^2 - 2x - 3"
+      ],
+      "correct_answer": "x^2 + 2x + 5",
+      "explanation": "x^2 + 2x + 5 has no integer factors because there are no two integers that add to 2 and multiply to 5."
+    },
+    {
+      "id": 4,
+      "type": "fill-in-blank",
+      "question_text": "Factoring is the process of rewriting an expression as a _____ of its factors.",
+      "correct_answers": [
+        "product"
+      ],
+      "case_sensitive": false,
+      "explanation": "Factoring is the opposite of expanding, and results in a product of factors."
+    },
+    {
+      "id": 5,
+      "type": "step-by-step",
+      "question_text": "Factor the quadratic expression: 3x^2 + 10x + 8",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "Multiply the leading coefficient (3) by the constant term (8). What is the result?",
+          "correct_answer": "24",
+          "hint": "This helps find the numbers for splitting the middle term.",
+          "explanation": "3 * 8 = 24"
+        },
+        {
+          "stage_number": 2,
+          "prompt": "Find two numbers that multiply to 24 and add up to 10 (the middle term's coefficient). What are these two numbers?",
+          "correct_answer": "6 and 4",
+          "hint": "Consider the factors of 24.",
+          "explanation": "6 * 4 = 24 and 6 + 4 = 10"
+        },
+        {
+          "stage_number": 3,
+          "prompt": "Rewrite the middle term (10x) using the two numbers you found: 3x^2 + 6x + 4x + 8. Now factor by grouping: what is the fully factored expression?",
+          "correct_answer": "(3x + 4)(x + 2)",
+          "hint": "Group the first two terms and the last two terms, then factor out the greatest common factor from each group.",
+          "explanation": "3x^2 + 6x + 4x + 8 -> 3x(x + 2) + 4(x + 2) -> (3x + 4)(x + 2)"
+        }
+      ]
+    }
+  ],
+  "created_at": "20251019_040648"
+}

@@ -27,11 +27,32 @@ class ManimService:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         return timestamp
     
+    def _fix_negative_waits(self, manim_code: str) -> str:
+        """Fix negative wait times in generated Manim code."""
+        import re
+
+        # Pattern to match self.wait() calls with calculations
+        # Matches: self.wait(X - Y) where X - Y might be negative
+        def replace_wait(match):
+            wait_content = match.group(1)
+            # If it contains a subtraction, wrap it in max(0.1, ...)
+            if '-' in wait_content and 'max(' not in wait_content:
+                return f"self.wait(max(0.1, {wait_content}))"
+            return match.group(0)
+
+        # Fix wait calls with calculations
+        fixed_code = re.sub(r'self\.wait\(([^)]+)\)', replace_wait, manim_code)
+
+        return fixed_code
+
     def _save_script(self, manim_code: str, filename: str) -> Path:
         """Save Manim code to a file."""
+        # Fix any negative wait times before saving
+        fixed_code = self._fix_negative_waits(manim_code)
+
         script_path = self.code_dir / f"{filename}.py"
         with open(script_path, 'w', encoding='utf-8') as f:
-            f.write(manim_code)
+            f.write(fixed_code)
         return script_path
     
     def _render_video(self, script_path: Path) -> bool:
@@ -104,40 +125,71 @@ class ManimService:
             print(f"Manim service error: {str(e)}")
             return None, str(script_path) if 'script_path' in locals() else None
     
+    def _find_ffmpeg(self) -> str:
+        """
+        Find ffmpeg executable on the system.
+        Returns the path to ffmpeg or 'ffmpeg' if in PATH.
+        """
+        import shutil
+
+        # First check if ffmpeg is in PATH
+        ffmpeg_path = shutil.which('ffmpeg')
+        if ffmpeg_path:
+            return ffmpeg_path
+
+        # Common Windows installation paths
+        common_paths = [
+            r'C:\ffmpeg\bin\ffmpeg.exe',
+            r'C:\Program Files\ffmpeg\bin\ffmpeg.exe',
+            r'C:\Program Files (x86)\ffmpeg\bin\ffmpeg.exe',
+            str(Path.home() / 'ffmpeg' / 'bin' / 'ffmpeg.exe'),
+        ]
+
+        for path in common_paths:
+            if Path(path).exists():
+                print(f"[ManimService] Found ffmpeg at: {path}")
+                return path
+
+        # If not found, return 'ffmpeg' and let it fail with a clear error
+        return 'ffmpeg'
+
     def combine_video_audio(self, video_path: str, audio_path: str, output_filename: str = None) -> str:
         """
         Combine video and audio files using ffmpeg.
-        
+
         Args:
             video_path: Path to the video file (without audio)
             audio_path: Path to the audio file
             output_filename: Optional custom filename for output (default: uses video filename)
-        
+
         Returns:
             Path to the combined video file in final_videos directory
         """
         try:
             video_path = Path(video_path)
             audio_path = Path(audio_path)
-            
+
             if not video_path.exists():
                 raise FileNotFoundError(f"Video file not found: {video_path}")
             if not audio_path.exists():
                 raise FileNotFoundError(f"Audio file not found: {audio_path}")
-            
+
             # Use the video filename or custom filename
             if output_filename is None:
                 output_filename = video_path.name
-            
+
             final_video_path = self.final_videos_dir / output_filename
-            
+
+            # Find ffmpeg executable
+            ffmpeg_exe = self._find_ffmpeg()
+
             # Use ffmpeg to combine video and audio
             # -i: input files
             # -c:v copy: copy video codec (no re-encoding)
             # -c:a aac: encode audio to aac
             # -shortest: finish encoding when the shortest input stream ends
             cmd = [
-                "ffmpeg",
+                ffmpeg_exe,
                 "-y",  # Overwrite output file if it exists
                 "-i", str(video_path),
                 "-i", str(audio_path),
@@ -146,22 +198,23 @@ class ManimService:
                 "-shortest",     # End when shortest stream ends
                 str(final_video_path)
             ]
-            
+
             print(f"[ManimService] Combining video and audio...")
+            print(f"[ManimService] Using ffmpeg: {ffmpeg_exe}")
             print(f"[ManimService] Video: {video_path.name}")
             print(f"[ManimService] Audio: {audio_path.name}")
             print(f"[ManimService] Output: {final_video_path.name}")
-            
+
             result = subprocess.run(cmd, capture_output=True, text=True)
-            
+
             if result.returncode != 0:
                 print(f"[ManimService] FFmpeg failed with return code {result.returncode}")
                 print(f"[ManimService] STDOUT: {result.stdout}")
                 print(f"[ManimService] STDERR: {result.stderr}")
                 return None
-            
+
             print(f"[ManimService] Successfully combined video and audio: {final_video_path.name}")
-            
+
             # Delete the original video file from manim_videos after successful combination
             try:
                 if video_path.exists():
@@ -169,9 +222,29 @@ class ManimService:
                     print(f"[ManimService] Deleted original video: {video_path.name}")
             except Exception as delete_error:
                 print(f"[ManimService] Warning: Could not delete original video: {delete_error}")
-            
+
             return str(final_video_path)
-            
+
+        except FileNotFoundError as e:
+            if 'ffmpeg' in str(e).lower() or 'WinError 2' in str(e):
+                print("\n" + "="*80)
+                print("FFMPEG NOT FOUND!")
+                print("="*80)
+                print("FFmpeg is required to combine video and audio but was not found on your system.")
+                print("\nTo fix this:")
+                print("1. Download ffmpeg from: https://ffmpeg.org/download.html")
+                print("   For Windows: https://www.gyan.dev/ffmpeg/builds/")
+                print("2. Extract the downloaded archive")
+                print("3. Add the 'bin' folder to your system PATH")
+                print("   OR place ffmpeg.exe in one of these locations:")
+                print("   - C:\\ffmpeg\\bin\\ffmpeg.exe")
+                print("   - C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe")
+                print("4. Restart your terminal/IDE")
+                print("="*80 + "\n")
+            print(f"[ManimService] Error: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return None
         except Exception as e:
             print(f"[ManimService] Error combining video and audio: {str(e)}")
             import traceback

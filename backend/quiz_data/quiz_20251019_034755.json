@@ -1,0 +1,86 @@
+{
+  "quiz_id": "20251019_034755",
+  "video_id": null,
+  "prompt": "explain factoring",
+  "questions": [
+    {
+      "id": 1,
+      "type": "multiple-choice",
+      "question_text": "What is the primary goal of factoring?",
+      "options": [
+        "To expand an expression",
+        "To simplify an expression by expressing it as a product of its factors",
+        "To solve for a variable",
+        "To combine like terms"
+      ],
+      "correct_answer": "To simplify an expression by expressing it as a product of its factors",
+      "explanation": "Factoring breaks down an expression into smaller parts (its factors) that, when multiplied together, produce the original expression."
+    },
+    {
+      "id": 2,
+      "type": "step-by-step",
+      "question_text": "Factor the expression: x^2 + 5x + 6",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "Find two numbers that multiply to 6 and add up to 5.",
+          "correct_answer": "2 and 3",
+          "hint": "Think of factor pairs of 6.",
+          "explanation": "2 * 3 = 6 and 2 + 3 = 5."
+        },
+        {
+          "stage_number": 2,
+          "prompt": "Use these numbers to write the factored form.",
+          "correct_answer": "(x + 2)(x + 3)",
+          "hint": "The numbers you found go inside the parentheses with x.",
+          "explanation": "The factored form is (x + 2)(x + 3)."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "fill-in-blank",
+      "question_text": "The greatest _____ factor (GCF) is the largest factor that divides evenly into two or more numbers.",
+      "correct_answers": [
+        "common"
+      ],
+      "case_sensitive": false,
+      "explanation": "The Greatest Common Factor is the largest number that divides two or more numbers."
+    },
+    {
+      "id": 4,
+      "type": "multiple-choice",
+      "question_text": "Which of the following expressions is a difference of squares?",
+      "options": [
+        "x^2 + 4",
+        "x^2 - 4",
+        "x^2 + 4x + 4",
+        "x^2 - 4x + 4"
+      ],
+      "correct_answer": "x^2 - 4",
+      "explanation": "A difference of squares has the form a^2 - b^2. x^2 - 4 fits this pattern (x^2 - 2^2)."
+    },
+    {
+      "id": 5,
+      "type": "step-by-step",
+      "question_text": "Factor the expression: 3x^2 + 12x",
+      "stages": [
+        {
+          "stage_number": 1,
+          "prompt": "What is the greatest common factor (GCF) of 3x^2 and 12x?",
+          "correct_answer": "3x",
+          "hint": "Look for the largest number and the highest power of x that divides both terms.",
+          "explanation": "3 is the largest number that divides both 3 and 12. x is the highest power of x that divides both x^2 and x."
+        },
+        {
+          "stage_number": 2,
+          "prompt": "Factor out the GCF from the expression.",
+          "correct_answer": "3x(x + 4)",
+          "hint": "Divide each term in the original expression by the GCF.",
+          "explanation": "3x^2 / 3x = x and 12x / 3x = 4, so the factored expression is 3x(x + 4)."
+        }
+      ]
+    }
+  ],
+  "created_at": "20251019_034755"
+}

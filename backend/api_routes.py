@@ -659,3 +659,231 @@ def register_routes(app):
         if final_video_path.exists():
             return send_file(final_video_path, mimetype='video/mp4')
         return jsonify({'error': 'Final video not found'}), 404
+
+
+    @app.route('/api/generate-quiz', methods=['POST'])
+    def generate_quiz():
+        """Generate quiz questions based on a topic using Gemini."""
+        data = request.json or {}
+        prompt = data.get('prompt', '')
+        video_id = data.get('video_id', None)
+
+        if not prompt:
+            return jsonify({'error': 'Prompt is required'}), 400
+
+        try:
+            print(f"\n[API-Quiz] Generating quiz for prompt: {prompt[:50]}...")
+
+            # Call Gemini to generate quiz questions
+            quiz_prompt = f"""Generate a quiz with 4-5 questions about the following topic: {prompt}
+
+Requirements:
+1. Include a mix of question types:
+   - At least 1 step-by-step problem (for procedural topics like math/science)
+   - 1-2 multiple choice questions
+   - 1 fill-in-blank question
+
+2. For step-by-step questions:
+   - Break down the problem into 2-4 sequential stages
+   - Each stage should have:
+     * Clear prompt asking what to do
+     * Single correct answer
+     * Helpful hint
+     * Brief explanation
+
+3. For multiple choice questions:
+   - Provide 4 options
+   - Only one correct answer
+   - Include explanation
+
+4. For fill-in-blank questions:
+   - Can have multiple acceptable answers (synonyms)
+   - Include explanation
+
+5. Return ONLY valid JSON in this exact format (no markdown, no code blocks):
+{{
+  "questions": [
+    {{
+      "id": 1,
+      "type": "step-by-step",
+      "question_text": "Solve for x: 2x + 5 = 13",
+      "stages": [
+        {{
+          "stage_number": 1,
+          "prompt": "Subtract 5 from both sides. What is the result?",
+          "correct_answer": "2x = 8",
+          "hint": "Remember: what you do to one side, do to the other",
+          "explanation": "13 - 5 = 8, so we get 2x = 8"
+        }}
+      ]
+    }},
+    {{
+      "id": 2,
+      "type": "multiple-choice",
+      "question_text": "Which property was used in the first step?",
+      "options": ["Addition", "Subtraction", "Multiplication", "Division"],
+      "correct_answer": "Subtraction",
+      "explanation": "We subtracted 5 from both sides"
+    }},
+    {{
+      "id": 3,
+      "type": "fill-in-blank",
+      "question_text": "The equation 2x + 5 = 13 is called a _____ equation.",
+      "correct_answers": ["linear", "first-degree"],
+      "case_sensitive": false,
+      "explanation": "This is a linear equation because x has a degree of 1"
+    }}
+  ]
+}}
+
+Topic: {prompt}
+Difficulty: intermediate
+
+Remember: Return ONLY the JSON object, no other text or formatting."""
+
+            response = gemini_service.client.models.generate_content(
+                model='gemini-2.0-flash-exp',
+                contents=quiz_prompt
+            )
+
+            quiz_text = response.text.strip()
+
+            # Clean up the response - remove markdown code blocks if present
+            if quiz_text.startswith('```'):
+                # Remove markdown code blocks
+                quiz_text = re.sub(r'^```(?:json)?\n', '', quiz_text)
+                quiz_text = re.sub(r'\n```$', '', quiz_text)
+                quiz_text = quiz_text.strip()
+
+            # Parse JSON
+            quiz_data = json.loads(quiz_text)
+
+            print(f"[API-Quiz] Generated {len(quiz_data.get('questions', []))} questions")
+
+            # Store quiz in JSON file (simple storage for now)
+            quiz_storage_dir = Path('quiz_data')
+            quiz_storage_dir.mkdir(exist_ok=True)
+
+            # Generate quiz ID
+            from datetime import datetime
+            quiz_id = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+            quiz_file = quiz_storage_dir / f'quiz_{quiz_id}.json'
+            with open(quiz_file, 'w') as f:
+                json.dump({
+                    'quiz_id': quiz_id,
+                    'video_id': video_id,
+                    'prompt': prompt,
+                    'questions': quiz_data.get('questions', []),
+                    'created_at': quiz_id
+                }, f, indent=2)
+
+            print(f"[API-Quiz] Quiz saved: {quiz_file}")
+
+            return jsonify({
+                'success': True,
+                'quiz_id': quiz_id,
+                'questions': quiz_data.get('questions', [])
+            })
+
+        except json.JSONDecodeError as e:
+            print(f"[API-Quiz ERROR] Failed to parse JSON: {str(e)}")
+            print(f"[API-Quiz ERROR] Response text: {quiz_text}")
+            return jsonify({
+                'error': 'Failed to parse quiz data',
+                'details': str(e)
+            }), 500
+        except Exception as e:
+            error_msg = f"{type(e).__name__}: {str(e)}"
+            print(f"[API-Quiz ERROR] Quiz generation failed: {error_msg}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                'error': error_msg,
+                'error_type': type(e).__name__
+            }), 500
+
+
+    @app.route('/api/quiz/validate', methods=['POST'])
+    def validate_quiz_answer():
+        """Validate a quiz answer (server-side to prevent cheating)."""
+        data = request.json or {}
+        quiz_id = data.get('quiz_id')
+        question_id = data.get('question_id')
+        stage_number = data.get('stage_number')  # For step-by-step questions
+        user_answer = data.get('user_answer', '').strip()
+
+        if not quiz_id or question_id is None or not user_answer:
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        try:
+            # Load quiz data
+            quiz_file = Path('quiz_data') / f'quiz_{quiz_id}.json'
+            if not quiz_file.exists():
+                return jsonify({'error': 'Quiz not found'}), 404
+
+            with open(quiz_file, 'r') as f:
+                quiz_data = json.load(f)
+
+            # Find the question
+            questions = quiz_data.get('questions', [])
+            question = next((q for q in questions if q['id'] == question_id), None)
+
+            if not question:
+                return jsonify({'error': 'Question not found'}), 404
+
+            # Validate based on question type
+            question_type = question.get('type')
+            is_correct = False
+            explanation = ''
+
+            # Helper function to normalize answer (remove extra spaces, lowercase)
+            def normalize_answer(ans):
+                import re
+                # Remove extra whitespace and convert to lowercase
+                return re.sub(r'\s+', ' ', ans.strip().lower())
+
+            if question_type == 'step-by-step':
+                if stage_number is None:
+                    return jsonify({'error': 'stage_number required for step-by-step questions'}), 400
+
+                stages = question.get('stages', [])
+                stage = next((s for s in stages if s['stage_number'] == stage_number), None)
+
+                if not stage:
+                    return jsonify({'error': 'Stage not found'}), 404
+
+                correct_answer = normalize_answer(stage.get('correct_answer', ''))
+                user_normalized = normalize_answer(user_answer)
+                is_correct = user_normalized == correct_answer
+                explanation = stage.get('explanation', '')
+
+            elif question_type == 'multiple-choice':
+                correct_answer = normalize_answer(question.get('correct_answer', ''))
+                user_normalized = normalize_answer(user_answer)
+                is_correct = user_normalized == correct_answer
+                explanation = question.get('explanation', '')
+
+            elif question_type == 'fill-in-blank':
+                correct_answers = question.get('correct_answers', [])
+                case_sensitive = question.get('case_sensitive', False)
+
+                if case_sensitive:
+                    is_correct = user_answer.strip() in [ans.strip() for ans in correct_answers]
+                else:
+                    user_normalized = normalize_answer(user_answer)
+                    is_correct = user_normalized in [normalize_answer(ans) for ans in correct_answers]
+
+                explanation = question.get('explanation', '')
+
+            return jsonify({
+                'correct': is_correct,
+                'explanation': explanation
+            })
+
+        except Exception as e:
+            error_msg = f"{type(e).__name__}: {str(e)}"
+            print(f"[API-Validate ERROR] Validation failed: {error_msg}")
+            return jsonify({
+                'error': error_msg
+            }), 500

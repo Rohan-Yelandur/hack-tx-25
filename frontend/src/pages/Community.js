@@ -7,7 +7,7 @@ function Community() {
   const [filteredVideos, setFilteredVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+  const [expandedCode, setExpandedCode] = useState({});
   const [selectedTags, setSelectedTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
   const videoRefs = useRef({});
@@ -116,17 +116,42 @@ function Community() {
     setSelectedTags([]);
   };
 
-  const handleDownload = (videoId) => {
-    const downloadUrl = `${API_BASE_URL}/api/download-video/${videoId}`;
-    const a = document.createElement('a');
-    a.href = downloadUrl;
-    a.download = `animation_${videoId}.mp4`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const handleDownload = async (videoId) => {
+    // Videos already have audio embedded (final_video_url)
+    const video = videos.find(v => v.id === videoId);
+    if (video && video.final_video_url) {
+      try {
+        const downloadUrl = `${API_BASE_URL}${video.final_video_url}`;
+
+        // Fetch the video as a blob to force download instead of navigation
+        const response = await fetch(downloadUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `animation_${videoId}.mp4`;
+        document.body.appendChild(a);
+        a.click();
+
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } catch (err) {
+        console.error('Download failed:', err);
+      }
+    }
   };
 
-  
+  const toggleCode = (videoId) => {
+    setExpandedCode(prev => ({
+      ...prev,
+      [videoId]: !prev[videoId]
+    }));
+  };
+
+
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp * 1000);
@@ -263,6 +288,30 @@ function Community() {
                   </svg>
                 </button>
               </div>
+
+              {video.manim_code_url && (
+                <div className="code-section">
+                  <button
+                    onClick={() => toggleCode(video.id)}
+                    className="toggle-code-button"
+                  >
+                    {expandedCode[video.id] ? 'Hide Code' : 'View Code'}
+                  </button>
+
+                  {expandedCode[video.id] && (
+                    <div className="code-container">
+                      <a
+                        href={`${API_BASE_URL}${video.manim_code_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="view-code-link"
+                      >
+                        Open Code File →
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ))}
