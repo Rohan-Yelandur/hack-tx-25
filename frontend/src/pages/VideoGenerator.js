@@ -230,7 +230,7 @@ function VideoGenerator({ showSplash }) {
   };
 
   // Determine if input section should be shown
-  const showInputSection = !videoLoading && !videoData;
+  const showInputSection = !videoLoading && !currentLesson.videoUrl;
 
   return (
     <div className="video-generator">
@@ -245,7 +245,7 @@ function VideoGenerator({ showSplash }) {
             transition={{ duration: 0.8, delay: showSplash ? 0.3 : 0 }}
           >
             <h2 className="input-title">
-              Generate <span className="highlight-cyan">Lessons</span> with AI
+              Generate <span className="highlight-cyan">Math Lessons</span> with Practice Problems
             </h2>
             
             <div className="input-container">
@@ -358,7 +358,7 @@ function VideoGenerator({ showSplash }) {
       )}
 
       {/* Video Section */}
-      {videoData && (
+      {currentLesson.videoUrl && (
         <motion.div 
           className="video-section"
           initial={{ opacity: 0, y: 20 }}
