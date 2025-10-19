@@ -1,7 +1,7 @@
 # Environment
 .env
 .venv
-
+community_videos.json
 # Video output folders
 manim_code
 manim_videos
